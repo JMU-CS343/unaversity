@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Schedule | Unaversity</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="/css/schedule.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"> <!--Title font (Ultra)-->
+</head>
+
+<body>
+    <header>
+        <nav id="main-nav">
+            <a href="/index.html">U<span style="color: #FFD966;">NAV</span>ERSITY</a>
+            <ul>
+                <li><a href="/index.html">Home</a></li>
+                <li><a href="schedule.html">Schedule</a></li>
+                <li>Stats</li>
+                <li><a href="theme.html">Theme</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="wrapper">
+        <nav id="week-nav">
+            <ul>
+                <li><strong>MONDAY</strong></li>
+                <li><strong>TUESDAY</strong></li>
+                <li><strong>WEDNESDAY</strong></li>
+                <li><strong>THURSDAY</strong></li>
+                <li><strong>FRIDAY</strong></li>
+            </ul>
+        </nav>
+        <main>
+            Main section for classes
+            <ul>
+                <li>Example Class</li>
+                <li>Example Class</li>
+                <li>Example Class</li>
+            </ul>
+        </main>
+        <aside id="map-background">
+            <div id="map">INSERT MAP HERE</div>
+            <div id="map-totals">
+                <p>Total Time Placeholder</p>
+                <p>Total Dist Placeholder</p>
+            </div>
+
+        </aside>
+    </div>
+
+    <script>
+        // Apply saved theme (Include in every page)
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+    </script>
+
+</body>
+
+</html>
