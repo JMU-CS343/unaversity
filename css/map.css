@@ -1,0 +1,5 @@
+#map {
+    height: 500px;
+    /* or 100% if you want it to fill the container */
+    width: 100%;
+}
