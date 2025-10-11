@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Theme | Unaversity</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="/css/theme.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"> <!--Title font (Ultra)-->
+</head>
+
+<body>
+    <header>
+        <nav id="main-nav">
+            <a href="/index.html">U<span style="color: #FFD966;">NAV</span>ERSITY</a>
+            <ul>
+                <li><a href="/index.html">Home</a></li>
+                <li><a href="schedule.html">Schedule</a></li>
+                <li>Stats</li>
+                <li><a href="theme.html">Theme</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div id="buttons">
+            <button onclick="setTheme('default')">Default Theme</button>
+            <button onclick="setTheme('dark')">Dark Theme</button>
+            <button onclick="setTheme('high-contrast')">High Contrast Theme</button>
+            <img src="/assets/default-theme.png">
+            <img src="/assets/dark-theme.png">
+            <img src="/assets/high-contrast-theme.png">
+        </div>
+    </main>
+    <script>
+        function setTheme(theme) {
+            if (theme === 'default') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.removeItem('theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+            }
+        }
+
+        // Apply saved theme (Include in every page)
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+
+    </script>
+</body>
+
+</html>
