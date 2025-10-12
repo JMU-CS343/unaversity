@@ -1,0 +1,37 @@
+/* Simple, safe transitions for the whole app (no layout shift) */
+
+/* tweak once here */
+:root { --t: 260ms ease; }
+
+/* accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0s !important; }
+}
+
+/* what should transition */
+a, button,
+#main-nav, main, .wrapper,
+#week-nav li, #map-background,
+#welcome, #tagline, img {
+  transition:
+    background-color var(--t),
+    color var(--t),
+    border-color var(--t),
+    box-shadow var(--t),
+    opacity var(--t),
+    filter var(--t),
+    transform var(--t);
+}
+
+/* Nav links: underline animation */
+#main-nav a {
+  background-image: linear-gradient(var(--main-yellow-color), var(--main-yellow-color));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 2px;
+  transition: background-size var(--t);
+}
+#main-nav a:hover,
+#main-nav a:focus-visible {
+  background-size: 100% 2px;
+}
