@@ -46,7 +46,15 @@
             </ul>
         </main>
         <aside id="map-background">
-            <div id="map">INSERT MAP HERE</div>
+            <div id="map">
+                <div id="map-loading">
+                    <div class="spinner"></div>
+                    <p>Loading map...</p>
+                    <p id="map-loading-timeout" style="display: none;">
+                        ⚠️ Taking longer than expected...<br> You may be experiencing connection issues
+                    </p>
+                </div>
+            </div>
             <div id="map-totals">
                 <p id="route-time">Total Time Placeholder</p>
                 <p id="route-dist">Total Dist Placeholder</p>
