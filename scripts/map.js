@@ -29,6 +29,10 @@ function initMap() {
 
 //from and to should be formatted as {lat, long} how is google.maps.TravelMode DRIVING, WALKING, BICYCLING, TRANSIT
 function route(from, to, how) {
+  const time = document.getElementById("route-time");
+  const dist = document.getElementById("route-dist");
+  spin(time);
+  spin(dist);
   // Define your route request
   const request = {
     origin: from,
@@ -43,12 +47,8 @@ function route(from, to, how) {
       const route = result.routes[0].legs[0];
       const distance = route.distance.text; // e.g., "1.2 mi"
       const duration = route.duration.text; // e.g., "5 mins"
-      document.getElementById(
-        "route-time"
-      ).textContent = `Total Time: ${duration}`;
-      document.getElementById(
-        "route-dist"
-      ).textContent = `Total Distance: ${distance}`;
+      time.textContent = `Total Time: ${duration}`;
+      dist.textContent = `Total Distance: ${distance}`;
 
       const distanceInMeters = route.distance.value; // e.g., 1932
       const durationInSeconds = route.duration.value; // e.g., 300
@@ -59,5 +59,41 @@ function route(from, to, how) {
     }
   });
 }
+
+function getLoadingSpinner() {
+  return `
+    <div class="spinner-container">
+      <div class="spinner"></div>
+    </div>
+    
+    <style>
+      .spinner-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+      }
+      
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  `;
+}
+
+function spin(elem) {
+  console.log("spin");
+  elem.innerHTML = getLoadingSpinner();
+}
 // Call initMap when page loads
-window.addEventListener("load", initMap);
+//window.addEventListener("load",));
