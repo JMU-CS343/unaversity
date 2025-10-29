@@ -78,8 +78,8 @@
   </header>
 
   <div class="wrapper">
-    <!-- Weekday buttons (desktop/tablet only) -->
-    <nav id="week-nav" class="d-none d-md-block">
+    <!-- Weekday buttons (desktop only) -->
+    <nav id="week-nav" class="d-none d-lg-block">
       <ul>
         <li><strong>MONDAY</strong></li>
         <li><strong>TUESDAY</strong></li>
@@ -89,12 +89,15 @@
       </ul>
     </nav>
 
-    <!-- Mobile "Weekdays" dropdown (phones only) -->
-    <!-- ⬇️ Added id so we can hide/show it when the nav collapses/expands -->
-    <div id="weekdays-mobile" class="d-md-none px-3" style="margin-top: 8rem;">
+    <!-- Mobile/Tablet "Weekdays" dropdown (shown on tablet + phone) -->
+    <div id="weekdays-mobile" class="d-lg-none px-3" style="margin-top: 8rem;">
       <div class="dropdown w-100">
         <button class="btn btn-warning w-100 rounded-3 fw-bold dropdown-toggle"
-                type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                type="button"
+                data-bs-toggle="dropdown"
+                data-bs-display="static"
+                data-bs-offset="0,0"
+                aria-expanded="false">
           Weekdays
         </button>
         <ul class="dropdown-menu w-100">
@@ -146,7 +149,6 @@
 
       if (!menu || !weekdays) return;
 
-      // On load, set initial visibility
       function syncWeekdays() {
         if (menu.classList.contains('show')) {
           weekdays.classList.add('d-none');
@@ -155,11 +157,8 @@
         }
       }
 
-      // Listen to Bootstrap collapse events
       menu.addEventListener('shown.bs.collapse', syncWeekdays);
       menu.addEventListener('hidden.bs.collapse', syncWeekdays);
-
-      // Also run once on load in case the menu starts open/closed
       syncWeekdays();
     })();
   </script>
