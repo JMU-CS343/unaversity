@@ -11,6 +11,7 @@
 
   <!-- Shared global styles (navbar, hero, etc.) -->
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="scripts/calander.js"></script>
 
   <link rel="stylesheet" href="../css/schedule.css">
   <link rel="stylesheet" href="../css/transitions.css">
@@ -81,11 +82,11 @@
     <!-- Weekday buttons (desktop/tablet only) -->
     <nav id="week-nav" class="d-none d-md-block">
       <ul>
-        <li><strong>MONDAY</strong></li>
-        <li><strong>TUESDAY</strong></li>
-        <li><strong>WEDNESDAY</strong></li>
-        <li><strong>THURSDAY</strong></li>
-        <li><strong>FRIDAY</strong></li>
+        <li><a  href="#monday">MONDAY</a></li>
+        <li><a  href="#tuesday">TUESDAY</a></li>
+        <li><a  href="#wednesday">WEDNESDAY</a></li>
+        <li><a  href="#thursday">THURSDAY</a></li>
+        <li><a  href="#friday">FRIDAY</a></li>
       </ul>
     </nav>
 
@@ -98,11 +99,11 @@
           Weekdays
         </button>
         <ul class="dropdown-menu w-100">
-          <li><a class="dropdown-item" href="#">MONDAY</a></li>
-          <li><a class="dropdown-item" href="#">TUESDAY</a></li>
-          <li><a class="dropdown-item" href="#">WEDNESDAY</a></li>
-          <li><a class="dropdown-item" href="#">THURSDAY</a></li>
-          <li><a class="dropdown-item" href="#">FRIDAY</a></li>
+          <li><a class="dropdown-item" href="?day=monday">MONDAY</a></li>
+          <li><a class="dropdown-item" href="?day=tuesday">TUESDAY</a></li>
+          <li><a class="dropdown-item" href="?day=wednesday">WEDNESDAY</a></li>
+          <li><a class="dropdown-item" href="?day=thursday">THURSDAY</a></li>
+          <li><a class="dropdown-item" href="?day=friday">FRIDAY</a></li>
         </ul>
       </div>
     </div>
@@ -137,8 +138,16 @@
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    //set current date
+    days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    
+      window.location.hash = days[new Date().getDay()]
 
+  </script>
+  
   <!-- Hide mobile "Weekdays" when navbar menu is open -->
+  
   <script>
     (function () {
       const menu = document.getElementById('mainMenu');
