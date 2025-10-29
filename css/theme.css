@@ -33,44 +33,80 @@ body {
 main {
     display: flex;
     justify-content: center;
+    padding-inline: 1rem;
+    margin-top: 10rem; /* space under fixed navbar */
 }
 
-/* BUTTONS */
+/* DEFAULT (desktop, big screens)
+   - Responsive grid that shrinks smoothly */
 #buttons {
     display: grid;
-    grid-template-columns: repeat(3, 30rem);
-    grid-template-rows: auto auto;
-    justify-content: center;
-    align-items: center;
-    margin-top: 10rem;
-    gap: 3rem;
+    grid-template-columns: repeat(3, minmax(16rem, 1fr));
+    grid-auto-rows: auto;
+    gap: 2rem;
+    align-items: start;
+    justify-items: center;
+
     background-color: var(--main-cream-color);
-    padding: 2.25rem 0.75rem;
+    padding: clamp(1rem, 2vw, 2.25rem);
     border-radius: 30px;
-    width: 100rem;
-}
-button {
-    display: flex;
-    flex: 0.25;
-    justify-content: center;
-    background-color: var(--main-yellow-color);
-    padding: 2rem 1rem;
-    font-size: 40px;
-    width: 30rem;
-    color: var(--text-color);
-    border-radius: 20px;
-    border: 3px solid black;
+
+    width: min(100rem, 92vw);   /* shrink-to-fit until it hits 100rem cap */
 }
 
-button:hover {
+/* Buttons scale down a bit with viewport */
+#buttons > button {
+    background-color: var(--main-yellow-color);
+    border: 3px solid black;
+    border-radius: 20px;
+
+    width: min(30rem, 28vw);         /* shrink on wide screens, cap at 30rem */
+    padding: clamp(1rem, 2.2vw, 2rem);
+    font-size: clamp(1.25rem, 2.2vw, 2.5rem);
+    color: var(--text-color);
+}
+
+/* Preview images scale responsively */
+#buttons > img {
+    width: min(30rem, 28vw);
+    height: auto;
+    border: 3px solid black;
+    border-radius: 20px;
+}
+
+/* Hover effect (kept consistent with rest of app) */
+#buttons > button:hover {
     background-color: color-mix(in srgb, var(--main-yellow-color) 85%, black);
     transform: scale(1.025);
 }
 
-/* IMAGES */
-img {
-    width: 30rem;
-    height: auto;
-    border: 3px solid black;
-    border-radius: 20px;
+/* iPad and below (≤ 992px)
+   - Hide images
+   - Stack buttons vertically and center */
+@media (max-width: 992px) {
+    #buttons {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+
+        width: min(46rem, 92vw); /* match site’s centered width */
+        padding: 1rem;
+    }
+
+    #buttons > img {
+        display: none; /* hide previews on iPad/phones */
+    }
+
+    #buttons > button {
+        width: min(32rem, 92vw);      /* full-ish width, centered */
+        font-size: clamp(1.125rem, 3.8vw, 1.75rem);
+        padding: clamp(0.875rem, 3.6vw, 1.25rem);
+    }
+}
+
+/* Small phones (≤ 360px) - Ensure no overflow */
+@media (max-width: 360px) {
+    #buttons { width: 94vw; }
+    #buttons > button { width: 100%; }
 }
