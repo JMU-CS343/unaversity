@@ -1,4 +1,5 @@
 /*=====ADD TO ALL PAGES=====*/
+
 :root {
     --background-color: #8E7CC3;
     --nav-background-color: #361C74;
@@ -6,20 +7,46 @@
     --main-yellow-color: #FFD966;
     --text-color: black;
 }
-[data-theme="dark"] { --background-color:#232323; --nav-background-color:#151515; --main-cream-color:#545454; --main-yellow-color:#838383; --text-color:white; }
-[data-theme="high-contrast"] { --background-color:#000000; --nav-background-color:#7600A8; --main-cream-color:#D26CFE; --main-yellow-color:#ffee00; --text-color:rgb(0,0,0); }
-body { background-color: var(--background-color); margin:0; font-family: arial; }
+
+[data-theme="dark"] {
+    --background-color: #232323;
+    --nav-background-color: #151515;
+    --main-cream-color: #545454;
+    --main-yellow-color: #838383;
+    --text-color: white;
+}
+
+[data-theme="high-contrast"] {
+    --background-color: #000000;
+    --nav-background-color: #7600A8;
+    --main-cream-color: #D26CFE;
+    --main-yellow-color: #ffee00;
+    --text-color: rgb(0, 0, 0);
+}
+
+body {
+    background-color: var(--background-color);
+    margin: 0;
+    font-family: arial;
+}
+
+
 /*^^^ADD TO ALL PAGES^^^*/
 
+
 /* WRAPPER */
+
 .wrapper {
     display: flex;
     justify-content: center;
-    padding-top: 8rem; /* below fixed navbar */
+    padding-top: 8rem;
+    /* below fixed navbar */
     color: var(--text-color);
 }
 
+
 /* WEEK NAV (desktop only) */
+
 #week-nav {
     display: flex;
     position: sticky;
@@ -28,6 +55,7 @@ body { background-color: var(--background-color); margin:0; font-family: arial; 
     height: 30rem;
     margin-right: 1rem;
 }
+
 #week-nav ul {
     padding: 0;
     list-style-type: none;
@@ -35,6 +63,7 @@ body { background-color: var(--background-color); margin:0; font-family: arial; 
     flex-wrap: wrap;
     justify-content: center;
 }
+
 #week-nav li {
     display: flex;
     flex: 1;
@@ -46,19 +75,24 @@ body { background-color: var(--background-color); margin:0; font-family: arial; 
     font-size: xx-large;
 }
 
+
 /* MAIN SCHEDULE */
+
 main {
     background-color: var(--main-cream-color);
     border-radius: 50px;
     padding: 2rem;
     width: 30rem;
     min-width: 300px;
-    height: 5000px; /* temp height (should be auto) */
+    height: 5000px;
+    /* temp height (should be auto) */
     margin-right: 5vw;
     margin-bottom: 4rem;
 }
 
+
 /* MAP */
+
 #map-background {
     position: sticky;
     top: 8rem;
@@ -69,21 +103,151 @@ main {
     min-width: 20rem;
     height: 45rem;
 }
-#map { border: 1px dashed black; height: 90%; }
-#map-totals { margin: 1rem; display: flex; justify-content: space-evenly; }
+
+#map {
+    border: 1px dashed black;
+    height: 90%;
+}
+
+#map-totals {
+    margin: 1rem;
+    display: flex;
+    justify-content: space-evenly;
+}
+
+#add-class {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+    background-color: var(--nav-background-color);
+    border-color: var(--nav-background-color);
+    position: fixed;
+    bottom: 30px;
+    left: 57%;
+    transform: translateX(-50%);
+    z-index: 999;
+    transition: all 0.1s ease-in-out;
+}
+
+#add-class:hover {
+    transform: translateX(-50%) scale(1.1);
+}
+
+
+/* MODAL STYLING */
+
+.modal-content {
+    background-color: var(--main-cream-color);
+    color: var(--text-color);
+    border-radius: 15px;
+}
+
+.modal-header {
+    background-color: var(--nav-background-color);
+    color: white;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+.modal-header .btn-close {
+    filter: invert(1);
+}
+
+.modal-body {
+    background-color: var(--main-cream-color);
+}
+
+.modal-footer {
+    background-color: var(--main-cream-color);
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    justify-content: center;
+}
+
+
+/* Modal choice buttons - solid and centered */
+
+.modal-body .btn-outline-primary {
+    background-color: var(--nav-background-color);
+    border-color: var(--nav-background-color);
+    color: white;
+}
+
+.modal-body .btn-outline-primary:hover {
+    background-color: var(--main-yellow-color);
+    border-color: var(--main-yellow-color);
+    color: var(--text-color);
+}
+
+
+/* Center the button container */
+
+.modal-body .d-grid {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+
+/* Footer buttons */
+
+.modal-footer .btn-primary {
+    background-color: var(--nav-background-color);
+    border-color: var(--nav-background-color);
+    color: white;
+}
+
+.modal-footer .btn-success {
+    background-color: var(--main-yellow-color);
+    border-color: var(--main-yellow-color);
+    color: var(--text-color);
+}
+
+.modal-footer .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+#addClassModal .modal-body,
+#manualInputModal .modal-footer {
+    display: flex;
+    justify-content: center !important;
+}
+
+
+/* Form inputs */
+
+.modal .form-control {
+    background-color: white;
+    border: 2px solid var(--nav-background-color);
+    color: var(--text-color);
+}
+
+.modal .form-control:focus {
+    border-color: var(--main-yellow-color);
+    box-shadow: 0 0 0 0.2rem rgba(142, 124, 195, 0.25);
+}
+
+.modal .form-label {
+    color: var(--text-color);
+    font-weight: bold;
+}
+
 
 /* PHONES + TABLETS (≤ 991.98px) */
+
 @media (max-width: 991.98px) {
     .wrapper {
         display: flex;
-        flex-direction: column;   /* stack: dropdown, main, map */
+        flex-direction: column;
+        /* stack: dropdown, main, map */
         align-items: center;
         gap: 0.75rem;
     }
-
     /* Desktop week buttons off on these sizes */
-    #week-nav { display: none !important; }
-
+    #week-nav {
+        display: none !important;
+    }
     /* Weekdays dropdown block above main */
     #weekdays-mobile {
         width: min(46rem, 92vw);
@@ -95,20 +259,17 @@ main {
         width: 100%;
         margin: 0 auto;
     }
-
     /* Main + map centered and stacked */
     main {
         margin: 0 1rem 1rem 1rem;
         width: min(46rem, 92vw);
         order: 1;
     }
-
     #map-background {
         position: static;
         width: min(46rem, 92vw);
         order: 2;
     }
-
     /* ===== Added: Bigger Weekdays button and centered dropdown text ===== */
     #weekdays-mobile .dropdown-toggle {
         display: flex;
@@ -119,7 +280,6 @@ main {
         /* scale the text with viewport but clamp it */
         font-size: clamp(1.25rem, 3.8vw, 2rem);
     }
-
     #weekdays-mobile .dropdown-menu .dropdown-item {
         text-align: center;
     }

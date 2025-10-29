@@ -11,7 +11,7 @@
 
   <!-- Shared global styles (navbar, hero, etc.) -->
   <link rel="stylesheet" href="../css/styles.css">
-  <script src="scripts/calander.js"></script>
+  <script src="../scripts/calender.js"></script>
 
   <link rel="stylesheet" href="../css/schedule.css">
   <link rel="stylesheet" href="../css/transitions.css">
@@ -37,7 +37,7 @@
         };
         document.head.appendChild(s);
       }
-      tryLoad('../map.js', '../scripts/map.js');
+      tryLoad('../scripts/map.js');
 
       // Shim so Google callback always finds window.initMap.
       function shimInit() {
@@ -80,6 +80,53 @@
   </header>
 
   <div class="wrapper">
+    <button id="add-class" class="btn btn-primary rounded-circle mt-5" data-bs-toggle="modal"
+      data-bs-target="#addClassModal">
+      +
+    </button>
+    <!-- Set manual input modal to have class manualInputModal to work with the button-->
+    <div class="modal fade" id="addClassModal" tabindex="-1" aria-labelledby="addClassModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addClassModalLabel">Add a Class</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="d-grid gap-3">
+              <button class="btn btn-outline-primary btn-lg" data-bs-dismiss="modal" data-bs-toggle="modal"
+                data-bs-target="#manualInputModal">
+                <i class="bi bi-pencil-square"></i> Enter Class Information Manually
+              </button>
+              <button class="btn btn-outline-primary btn-lg" data-bs-dismiss="modal"
+                onclick="document.getElementById('icsFileInput').click()">
+                <i class="bi bi-file-earmark-arrow-up"></i> Import from ICS File
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Hidden file input for ICS -->
+    <input type="file" id="icsFileInput" accept=".ics" style="display: none;" onchange="handleFileSelect(event)">
+
+
+    <div class="modal fade" id="parseReportModal" tabindex="-1" aria-labelledby="fileImportResult">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Importing your file...</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Weekday buttons (desktop only) -->
     <nav id="week-nav" class="d-none d-lg-block">
       <ul>
@@ -107,6 +154,7 @@
         </ul>
       </div>
     </div>
+
 
     <main>
       Main section for classes
