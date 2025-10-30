@@ -94,7 +94,7 @@
           </div>
           <div class="modal-body">
             <div class="d-grid gap-3">
-              <button class="btn btn-outline-primary btn-lg" data-bs-dismiss="modal" data-bs-toggle="modal"
+              <button id="manual-add-class" class="btn btn-outline-primary btn-lg" data-bs-dismiss="modal" data-bs-toggle="modal"
                 data-bs-target="#manualInputModal">
                 <i class="bi bi-pencil-square"></i> Enter Class Information Manually
               </button>
@@ -157,12 +157,20 @@
 
 
     <main>
-      Main section for classes
-      <ul id="classes">
-        <li>Example Class</li>
-        <li>Example Class</li>
-        <li>Example Class</li>
+      <ul id="class-list">
+        <!--Individual Class-->
+        <li>
+          <form>
+            <input type="text" class="class-name" name="class-name" placeholder="Class name">
+            <input type="text" class="prof-name" name="prof-name" placeholder="Professor">
+            <input type="time" class="time" name="start-time">
+            <input type="time" class="time" name="end-time">
+            <input type="text" class="location" name="location" placeholder="Location">
+            <button class="delete-class" type="button">-</button>
+          </form>
+        </li>
       </ul>
+      <button id="clear-classes" type="button">Clear All</button>
     </main>
 
     <aside id="map-background">
@@ -215,6 +223,40 @@
         menu.addEventListener('hidden.bs.collapse', syncWeekdays);
         syncWeekdays();
       })();
+  </script>
+
+  <!--Add/Delete/Clear classes-->
+  <script>
+    // Add new class
+    document.getElementById("manual-add-class").addEventListener("click", function () {
+      const classList = document.getElementById("class-list");
+      const newClass = document.createElement("li");
+      newClass.innerHTML = `
+      <form>
+        <input type="text" class="class-name" name="class-name" placeholder="Class name">
+        <input type="text" class="prof-name" name="prof-name" placeholder="Professor">
+        <input type="time" class="time" name="start-time">
+        <input type="time" class="time" name="end-time">
+        <input type="text" class="location" name="location" placeholder="Location">
+        <button class="delete-class" type="button">-</button>
+      </form>`
+      classList.appendChild(newClass);
+    });
+
+    // Delete class
+    document.getElementById("class-list").addEventListener("click", function (e) {
+      if (e.target && e.target.classList.contains("delete-class")) {
+        e.preventDefault();
+        const classToDelete = e.target.closest("li");
+        classToDelete.remove();
+      }
+    });
+
+    // Clear classes
+    document.getElementById("clear-classes").addEventListener("click", function () {
+      const classList = document.getElementById("class-list");
+      classList.innerHTML = "";
+    });
   </script>
 </body>
 
