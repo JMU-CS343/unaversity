@@ -1,10 +1,19 @@
 class EventData {
   constructor(name, number, location, start, end) {
     this.name = name;
-    this.number = number;
-    this.location = location;
+    this.number = number || "";
+    this.location = location || "";
+    // start / end may be Date objects initially, later replaced with formatted strings
     this.start = start;
     this.end = end;
+  }
+
+  // Convert stored Date start/end to formatted strings in-place (no new object)
+  ensureFormattedTimes() {
+    if (this.start instanceof Date && this.end instanceof Date) {
+      this.start = formatTime(this.start);
+      this.end = formatTime(this.end);
+    }
   }
 
   toString() {
@@ -48,7 +57,7 @@ function handleFileSelect(event) {
       body.innerHTML = result;
     };
 
-    //this calls onload function we set for the reader
+    // this calls onload function we set for the reader
     reader.readAsText(file);
   }
 
@@ -61,28 +70,43 @@ function parseICSForWeeklySchedule(icsText) {
   const eventBlocks = icsText.split("BEGIN:VEVENT");
 
   eventBlocks.slice(1).forEach((block) => {
-    const lines = block.split("\n");
-    const event = {};
+    // normalize line endings and split
+    const lines = block.split(/\r?\n/);
+    let title = "";
+    let start = null;
+    let end = null;
+    let location = "";
+    let rrule = "";
 
-    lines.forEach((line) => {
+    lines.forEach((lineRaw) => {
+      const line = lineRaw.trim();
+      if (!line) return;
+
       if (line.startsWith("SUMMARY:")) {
-        event.title = line.replace("SUMMARY:", "").trim();
-      }
-      if (line.startsWith("DTSTART")) {
-        event.start = parseICSDate(line);
-      }
-      if (line.startsWith("DTEND")) {
-        event.end = parseICSDate(line);
-      }
-      if (line.startsWith("LOCATION:")) {
-        event.location = line.replace("LOCATION:", "").trim();
-      }
-      if (line.startsWith("RRULE:")) {
-        event.rrule = line.replace("RRULE:", "").trim();
+        title = line.replace("SUMMARY:", "").trim();
+      } else if (line.startsWith("DTSTART")) {
+        start = parseICSDate(line);
+      } else if (line.startsWith("DTEND")) {
+        end = parseICSDate(line);
+      } else if (line.startsWith("LOCATION:")) {
+        location = line.replace("LOCATION:", "").trim();
       }
     });
 
-    if (event.start) events.push(event);
+    // only keep events that at least have a start
+    if (start) {
+      const courseNumber = extractCourseNumber(title);
+      // Store Date objects in EventData; times will be formatted later in convertToWeeklySchedule
+      const ev = new EventData(
+        title || "Untitled Event",
+        courseNumber,
+        location || "",
+        start,
+        end
+      );
+      
+      events.push(ev);
+    }
   });
 
   return convertToWeeklySchedule(events);
@@ -107,18 +131,20 @@ function convertToWeeklySchedule(events) {
   const weeklySchedule = [[], [], [], [], [], [], []];
   const seenClasses = new Set();
 
-  // Sort events by date
+  // Sort events by date (events have start as Date)
   events.sort((a, b) => a.start - b.start);
 
   for (const event of events) {
+    // we require both start and end for a proper time slot
     if (!event.start || !event.end) continue;
 
+    // day of week from Date
     const dayOfWeek = event.start.getDay();
     const startTime = formatTime(event.start);
     const endTime = formatTime(event.end);
 
     // Create unique key for this class slot
-    const classKey = `${dayOfWeek}-${startTime}-${event.title}`;
+    const classKey = `${dayOfWeek}-${startTime}-${event.name}`;
 
     // If we've seen this exact class before, we've completed the loop!
     if (seenClasses.has(classKey)) {
@@ -127,22 +153,16 @@ function convertToWeeklySchedule(events) {
 
     seenClasses.add(classKey);
 
-    // Extract course number from title if it exists (e.g., "CS 240" from "CS 240 - Data Structures")
-    const courseNumber = extractCourseNumber(event.title);
+    // update its start/end to formatted strings (in-place) so UI can read them
+    if (event.start instanceof Date) {
+      event.start = startTime;
+      event.end = endTime;
+    }
 
-    // Create EventData object
-    const eventData = new EventData(
-      event.title || "Untitled Event",
-      courseNumber,
-      event.location || "",
-      startTime,
-      endTime
-    );
-
-    weeklySchedule[dayOfWeek].push(eventData);
+    weeklySchedule[dayOfWeek].push(event);
   }
 
-  // Sort classes by start time for each day
+  // Sort classes by start time for each day (start is now a formatted string like "9:30 AM")
   weeklySchedule.forEach((dayEvents) => {
     dayEvents.sort((a, b) => {
       return timeToMinutes(a.start) - timeToMinutes(b.start);
@@ -183,6 +203,7 @@ function timeToMinutes(timeStr) {
   if (period === "PM" && hours !== 12) {
     totalMinutes += (hours + 12) * 60;
   } else if (period === "AM" && hours === 12) {
+    // 12:xx AM is 0:xx
     totalMinutes += 0;
   } else {
     totalMinutes += hours * 60;
