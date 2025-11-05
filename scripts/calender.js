@@ -3,23 +3,18 @@ class EventData {
     this.name = name;
     this.number = number || "";
     this.location = location || "";
-    // start / end may be Date objects initially, later replaced with formatted strings
-    this.start = start;
+    this.start = start; // Can be Date or formatted string
     this.end = end;
-  }
-
-  // Convert stored Date start/end to formatted strings in-place (no new object)
-  ensureFormattedTimes() {
-    if (this.start instanceof Date && this.end instanceof Date) {
-      this.start = formatTime(this.start);
-      this.end = formatTime(this.end);
-    }
   }
 
   toString() {
     return `Event: ${this.name} (Number: ${this.number}), Location: ${this.location}, Start: ${this.start}, End: ${this.end}`;
   }
 }
+
+let user_schedule = undefined;
+
+// ==================== FILE HANDLING ====================
 
 function handleFileSelect(event) {
   const file = event.target.files[0];
@@ -32,51 +27,235 @@ function handleFileSelect(event) {
 
   if (!file) {
     title.textContent = "Error!";
-    body.innerHTML = "Could Not Read your file correctly please try again";
+    body.innerHTML = "Could not read your file correctly. Please try again.";
   } else {
     const reader = new FileReader();
     reader.onload = function (e) {
       const icsContent = e.target.result;
       const week = parseICSForWeeklySchedule(icsContent);
 
-      // Set modal body content
-      title.textContent = "Success!";
-      let result = "";
+      title.textContent = "Import Successful!";
+      let result =
+        "<div class='alert alert-success'>Your schedule has been imported!</div>";
 
+      const dayNames = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
       week.forEach((day, dayIndex) => {
-        result += `Day ${dayIndex + 1}:<br>`;
-        if (day.length === 0) {
-          result += "&nbsp;&nbsp;No events<br>";
-        } else {
+        if (day.length > 0) {
+          result += `<strong>${dayNames[dayIndex]}:</strong><br>`;
           day.forEach((event) => {
-            result += `&nbsp;&nbsp;${event.name} (#${event.number}) at ${event.start}<br>`;
+            const startTime = formatTime(event.start);
+            result += `&nbsp;&nbsp;• ${event.name} ${
+              event.number ? "(#" + event.number + ")" : ""
+            } at ${startTime}<br>`;
           });
         }
       });
 
       body.innerHTML = result;
+
+      // Refresh the display after a short delay
+      setTimeout(() => {
+        displayClasses();
+        parseReportModal.hide();
+      }, 2000);
     };
 
-    // this calls onload function we set for the reader
     reader.readAsText(file);
   }
 
-  // Reset file input so same file can be selected again
   event.target.value = "";
 }
+
+function getLoadingSpinner() {
+  return `
+    <div class="text-center">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2">Processing your file...</p>
+    </div>
+  `;
+}
+
+// ==================== DISPLAY FUNCTIONS ====================
+
+function displayClasses() {
+  const list = document.getElementById("class-list");
+  if (!list) return;
+
+  list.innerHTML = ""; // Clear the list
+
+  let schedule = user_schedule;
+
+  // Load from localStorage if not in memory
+  if (!schedule) {
+    const stored = localStorage.getItem("parsedEvents");
+    if (stored) {
+      try {
+        const events = JSON.parse(stored).map((ev) => {
+          return new EventData(
+            ev.name,
+            ev.number,
+            ev.location,
+            new Date(ev.start),
+            new Date(ev.end)
+          );
+        });
+        schedule = convertToWeeklySchedule(events);
+        user_schedule = schedule;
+      } catch (e) {
+        console.error("Error loading schedule from storage:", e);
+        return;
+      }
+    }
+  }
+
+  if (!schedule) return;
+
+  // Get day index from URL hash
+  const dayMap = {
+    sunday: 0,
+    monday: 1,
+    tuesday: 2,
+    wednesday: 3,
+    thursday: 4,
+    friday: 5,
+    saturday: 6,
+  };
+  const hash = window.location.hash.slice(1).toLowerCase();
+  const dayIndex = dayMap[hash] ?? new Date().getDay();
+  const todayClasses = schedule[dayIndex];
+
+  if (!todayClasses || todayClasses.length === 0) {
+    // Show empty state message
+    const li = document.createElement("li");
+    li.innerHTML =
+      '<p class="text-muted text-center py-4">No classes scheduled for this day</p>';
+    list.appendChild(li);
+    return;
+  }
+
+  todayClasses.forEach((event) => {
+    const li = document.createElement("li");
+    const form = document.createElement("form");
+
+    const startTime24 = convertTo24Hour(event.start);
+    const endTime24 = convertTo24Hour(event.end);
+
+    form.innerHTML = `
+      <input type="text" class="class-name" name="class-name" value="${escapeHtml(
+        event.name
+      )}" placeholder="Class name">
+      <input type="text" class="prof-name" name="prof-name" placeholder="Professor">
+      <input type="time" class="time" name="start-time" value="${startTime24}">
+      <input type="time" class="time" name="end-time" value="${endTime24}">
+      <input type="text" class="location" name="location" value="${escapeHtml(
+        event.location
+      )}" placeholder="Location">
+      <button class="delete-class" type="button">-</button>
+    `;
+    li.appendChild(form);
+    list.appendChild(li);
+  });
+}
+
+// ==================== TIME CONVERSION FUNCTIONS ====================
+
+function convertTo24Hour(time) {
+  // Handle if time is already a Date object
+  if (time instanceof Date) {
+    const hours = String(time.getHours()).padStart(2, "0");
+    const minutes = String(time.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  }
+
+  // Handle string format like "9:30 AM" or "2:45 PM"
+  if (typeof time === "string") {
+    const match = time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (!match) return "00:00";
+
+    let hours = parseInt(match[1], 10);
+    const minutes = match[2];
+    const period = match[3].toUpperCase();
+
+    if (period === "PM" && hours !== 12) {
+      hours += 12;
+    } else if (period === "AM" && hours === 12) {
+      hours = 0;
+    }
+
+    return `${String(hours).padStart(2, "0")}:${minutes}`;
+  }
+
+  return "00:00";
+}
+
+function formatTime(date) {
+  if (!(date instanceof Date)) {
+    // If already formatted, return as-is
+    if (typeof date === "string" && date.match(/\d{1,2}:\d{2}\s*(AM|PM)/i)) {
+      return date;
+    }
+    return "12:00 AM";
+  }
+
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? "PM" : "AM";
+
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+
+  const minutesStr = minutes < 10 ? "0" + minutes : minutes;
+
+  return `${hours}:${minutesStr} ${ampm}`;
+}
+
+function timeToMinutes(time) {
+  // Handle Date objects
+  if (time instanceof Date) {
+    return time.getHours() * 60 + time.getMinutes();
+  }
+
+  // Handle string format "9:30 AM"
+  const timeStr = typeof time === "string" ? time : formatTime(time);
+  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+
+  if (!match) return 0;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3].toUpperCase();
+
+  if (period === "PM" && hours !== 12) {
+    hours += 12;
+  } else if (period === "AM" && hours === 12) {
+    hours = 0;
+  }
+
+  return hours * 60 + minutes;
+}
+
+// ==================== ICS PARSING ====================
 
 function parseICSForWeeklySchedule(icsText) {
   const events = [];
   const eventBlocks = icsText.split("BEGIN:VEVENT");
 
   eventBlocks.slice(1).forEach((block) => {
-    // normalize line endings and split
     const lines = block.split(/\r?\n/);
     let title = "";
     let start = null;
     let end = null;
     let location = "";
-    let rrule = "";
 
     lines.forEach((lineRaw) => {
       const line = lineRaw.trim();
@@ -93,10 +272,8 @@ function parseICSForWeeklySchedule(icsText) {
       }
     });
 
-    // only keep events that at least have a start
     if (start) {
       const courseNumber = extractCourseNumber(title);
-      // Store Date objects in EventData; times will be formatted later in convertToWeeklySchedule
       const ev = new EventData(
         title || "Untitled Event",
         courseNumber,
@@ -104,12 +281,13 @@ function parseICSForWeeklySchedule(icsText) {
         start,
         end
       );
-      
       events.push(ev);
     }
   });
 
-  return convertToWeeklySchedule(events);
+  localStorage.setItem("parsedEvents", JSON.stringify(events));
+  user_schedule = convertToWeeklySchedule(events);
+  return user_schedule;
 }
 
 function parseICSDate(line) {
@@ -127,53 +305,35 @@ function parseICSDate(line) {
 }
 
 function convertToWeeklySchedule(events) {
-  // Initialize 7-day array (Sunday=0 to Saturday=6)
   const weeklySchedule = [[], [], [], [], [], [], []];
   const seenClasses = new Set();
 
-  // Sort events by date (events have start as Date)
   events.sort((a, b) => a.start - b.start);
 
   for (const event of events) {
-    // we require both start and end for a proper time slot
     if (!event.start || !event.end) continue;
 
-    // day of week from Date
     const dayOfWeek = event.start.getDay();
     const startTime = formatTime(event.start);
-    const endTime = formatTime(event.end);
-
-    // Create unique key for this class slot
     const classKey = `${dayOfWeek}-${startTime}-${event.name}`;
 
-    // If we've seen this exact class before, we've completed the loop!
     if (seenClasses.has(classKey)) {
-      break; // EXIT - we have a full week
+      break; // Full week captured
     }
 
     seenClasses.add(classKey);
-
-    // update its start/end to formatted strings (in-place) so UI can read them
-    if (event.start instanceof Date) {
-      event.start = startTime;
-      event.end = endTime;
-    }
-
     weeklySchedule[dayOfWeek].push(event);
   }
 
-  // Sort classes by start time for each day (start is now a formatted string like "9:30 AM")
+  // Sort each day by start time
   weeklySchedule.forEach((dayEvents) => {
-    dayEvents.sort((a, b) => {
-      return timeToMinutes(a.start) - timeToMinutes(b.start);
-    });
+    dayEvents.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
   });
 
   return weeklySchedule;
 }
 
 function extractCourseNumber(title) {
-  // Try to extract course number patterns like "CS 240", "MATH 231", etc.
   const match = title.match(/([A-Z]{2,4})\s*(\d{3})/);
   if (match) {
     return `${match[1]} ${match[2]}`;
@@ -181,33 +341,19 @@ function extractCourseNumber(title) {
   return "";
 }
 
-function formatTime(date) {
-  let hours = date.getHours();
-  const minutes = date.getMinutes();
-  const ampm = hours >= 12 ? "PM" : "AM";
+// ==================== UTILITY FUNCTIONS ====================
 
-  hours = hours % 12;
-  hours = hours ? hours : 12; // 0 should be 12
-
-  const minutesStr = minutes < 10 ? "0" + minutes : minutes;
-
-  return `${hours}:${minutesStr} ${ampm}`;
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
 }
 
-function timeToMinutes(timeStr) {
-  // Convert "9:30 AM" to minutes since midnight for sorting
-  const [time, period] = timeStr.split(" ");
-  const [hours, minutes] = time.split(":").map(Number);
+// ==================== EVENT LISTENERS ====================
 
-  let totalMinutes = minutes;
-  if (period === "PM" && hours !== 12) {
-    totalMinutes += (hours + 12) * 60;
-  } else if (period === "AM" && hours === 12) {
-    // 12:xx AM is 0:xx
-    totalMinutes += 0;
-  } else {
-    totalMinutes += hours * 60;
-  }
+window.addEventListener("hashchange", displayClasses);
 
-  return totalMinutes;
-}
+// Load classes on page load
+window.addEventListener("DOMContentLoaded", () => {
+  displayClasses();
+});
