@@ -14,6 +14,7 @@ class EventData {
 
 let user_schedule = undefined;
 
+
 // ==================== FILE HANDLING ====================
 
 function handleFileSelect(event) {
@@ -144,6 +145,7 @@ function displayClasses() {
   }
 
   todayClasses.forEach((event) => {
+    /*
     const li = document.createElement("li");
     const form = document.createElement("form");
 
@@ -164,6 +166,34 @@ function displayClasses() {
     `;
     li.appendChild(form);
     list.appendChild(li);
+    */
+
+    const li = document.createElement("li");
+
+    const startTime24 = convertTo24Hour(event.start);
+    const endTime24 = convertTo24Hour(event.end);
+
+    li.innerHTML = `
+      <div class="mode-duration-wrapper">
+        <div class="mode-duration">Walk</div>
+        <img src="../assets/Arrow.png">
+        <div class="mode-duration">0 min</div>
+      </div>
+      <form>
+        <input type="text" class="class-name" name="class-name" value="${escapeHtml(
+          event.name
+        )}" placeholder="Class name">
+        <input type="text" class="prof-name" name="prof-name" placeholder="Professor">
+        <input type="time" class="time" name="start-time" value="${startTime24}">
+        <input type="time" class="time" name="end-time" value="${endTime24}">
+        <input type="text" class="location" name="location" value="${escapeHtml(
+          event.location
+        )}" placeholder="Location">
+        <button class="delete-class" type="button">-</button>
+      </form>
+    `;
+    list.appendChild(li);
+
   });
 }
 
