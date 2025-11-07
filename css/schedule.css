@@ -73,6 +73,7 @@ body {
     margin-bottom: 1rem;
     padding: 1.5rem 1rem;
     font-size: xx-large;
+    font-weight: 700;
 }
 
 
@@ -84,10 +85,120 @@ main {
     padding: 2rem;
     width: 30rem;
     min-width: 300px;
-    height: 5000px;
-    /* temp height (should be auto) */
+    height: auto;
     margin-right: 5vw;
     margin-bottom: 4rem;
+    margin-top: 0;
+    position: relative;
+}
+
+form {
+    position: relative;
+    background-color: var(--nav-background-color);
+    padding: 0 0 10em 0;
+    border-radius: 20px;
+    height: 22rem;
+    /*margin-bottom: 2rem;*/
+}
+
+.class-name {
+    height: 3.5rem;
+    border-radius: 20px 20px 0 0;
+    text-align: center;
+    width: 100%;
+    font-size: xx-large;
+}
+
+.prof-name {
+    background-color: var(--nav-background-color);
+    color: white;
+    border: none;
+    padding-left: 5%;
+    margin: 5%;
+    width: 90%;
+    font-size: xx-large;
+}
+
+.location {
+    background-color: var(--nav-background-color);
+    color: white;
+    border: none;
+    padding-left: 5%;
+    margin: 5%;
+    width: 90%;
+    font-size: xx-large;
+}
+
+form .time {
+    margin: 3%;
+    font-size: x-large;
+    background-color: var(--nav-background-color);
+    color: white;
+}
+
+main ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.delete-class {
+    position: absolute;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    border-radius: 50px;
+    font-weight: bolder;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#clear-classes {
+    position: absolute;
+    padding: 0;
+    width: 25%;
+    font-size: large;
+    bottom: 1rem;
+}
+
+/* Travel mode and duration between individual classes */
+
+.mode-duration {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background-color: var(--main-yellow-color);
+    width: 8rem;
+    height: 5rem;
+    padding: 0.75rem;
+    font-size: xx-large;
+    font-weight: bold;
+    border-radius: 10px;
+    margin-top: 3rem;
+    color: var(--text-color);
+    border: none;
+}
+
+.mode-option {
+    text-align: left;
+    color: var(--text-color);
+}
+
+.mode-duration-wrapper {
+    display: flex;
+    justify-content: center;
+}
+
+#class-list img {
+    width: 30%;
+    height: 11rem;
+    margin: 0.25rem 0 0.25rem 0;
 }
 
 

@@ -1,91 +1,310 @@
 class EventData {
-  constructor(name, number, location, start, end) {
-    this.name = name;
-    this.number = number;
-    this.location = location;
-    this.start = start;
-    this.end = end;
-  }
+    constructor(name, number, location, start, end) {
+        this.name = name;
+        this.number = number || "";
+        this.location = location || "";
+        this.start = start; // Can be Date or formatted string
+        this.end = end;
+    }
 
-  toString() {
-    return `Event: ${this.name} (Number: ${this.number}), Location: ${this.location}, Start: ${this.start}, End: ${this.end}`;
-  }
+    toString() {
+        return `Event: ${this.name} (Number: ${this.number}), Location: ${this.location}, Start: ${this.start}, End: ${this.end}`;
+    }
 }
+
+let user_schedule = undefined;
+
+
+// ==================== FILE HANDLING ====================
 
 function handleFileSelect(event) {
-  const file = event.target.files[0];
-  const modal = document.getElementById("parseReportModal");
-  const body = document.querySelector("#parseReportModal .modal-body");
-  const title = document.querySelector("#parseReportModal .modal-title");
-  body.innerHTML = getLoadingSpinner();
-  const parseReportModal = new bootstrap.Modal(modal);
-  parseReportModal.show();
+    const file = event.target.files[0];
+    const modal = document.getElementById("parseReportModal");
+    const body = document.querySelector("#parseReportModal .modal-body");
+    const title = document.querySelector("#parseReportModal .modal-title");
+    body.innerHTML = getLoadingSpinner();
+    const parseReportModal = new bootstrap.Modal(modal);
+    parseReportModal.show();
 
-  if (!file) {
-    title.textContent = "Error!";
-    body.innerHTML = "Could Not Read your file correctly please try again";
-  } else {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const icsContent = e.target.result;
-      const week = parseICSForWeeklySchedule(icsContent);
+    if (!file) {
+        title.textContent = "Error!";
+        body.innerHTML = "Could not read your file correctly. Please try again.";
+    } else {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const icsContent = e.target.result;
+            const week = parseICSForWeeklySchedule(icsContent);
 
-      // Set modal body content
-      title.textContent = "Success!";
-      let result = "";
+            title.textContent = "Import Successful!";
+            let result =
+                "<div class='alert alert-success'>Your schedule has been imported!</div>";
 
-      week.forEach((day, dayIndex) => {
-        result += `Day ${dayIndex + 1}:<br>`;
-        if (day.length === 0) {
-          result += "&nbsp;&nbsp;No events<br>";
-        } else {
-          day.forEach((event) => {
-            result += `&nbsp;&nbsp;${event.name} (#${event.number}) at ${event.start}<br>`;
-          });
+            const dayNames = [
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+            ];
+            week.forEach((day, dayIndex) => {
+                if (day.length > 0) {
+                    result += `<strong>${dayNames[dayIndex]}:</strong><br>`;
+                    day.forEach((event) => {
+                        const startTime = formatTime(event.start);
+                        result += `&nbsp;&nbsp;• ${event.name} ${
+              event.number ? "(#" + event.number + ")" : ""
+            } at ${startTime}<br>`;
+                    });
+                }
+            });
+
+            body.innerHTML = result;
+
+            // Refresh the display after a short delay
+            setTimeout(() => {
+                displayClasses();
+                parseReportModal.hide();
+            }, 2000);
+        };
+
+        reader.readAsText(file);
+    }
+
+    event.target.value = "";
+}
+
+function getLoadingSpinner() {
+    return `
+    <div class="text-center">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2">Processing your file...</p>
+    </div>
+  `;
+}
+
+// ==================== DISPLAY FUNCTIONS ====================
+
+function displayClasses() {
+    const list = document.getElementById("class-list");
+    if (!list) return;
+
+    list.innerHTML = ""; // Clear the list
+
+    let schedule = user_schedule;
+
+    // Load from localStorage if not in memory
+    if (!schedule) {
+        const stored = localStorage.getItem("parsedEvents");
+        if (stored) {
+            try {
+                const events = JSON.parse(stored).map((ev) => {
+                    return new EventData(
+                        ev.name,
+                        ev.number,
+                        ev.location,
+                        new Date(ev.start),
+                        new Date(ev.end)
+                    );
+                });
+                schedule = convertToWeeklySchedule(events);
+                user_schedule = schedule;
+            } catch (e) {
+                console.error("Error loading schedule from storage:", e);
+                return;
+            }
         }
-      });
+    }
 
-      body.innerHTML = result;
+    if (!schedule) return;
+
+    // Get day index from URL hash
+    const dayMap = {
+        sunday: 0,
+        monday: 1,
+        tuesday: 2,
+        wednesday: 3,
+        thursday: 4,
+        friday: 5,
+        saturday: 6,
     };
+    const hash = window.location.hash.slice(1).toLowerCase();
+    const dayIndex = dayMap[hash] ? ? new Date().getDay();
+    const todayClasses = schedule[dayIndex];
 
-    //this calls onload function we set for the reader
-    reader.readAsText(file);
+    if (!todayClasses || todayClasses.length === 0) {
+        // Show empty state message
+        const li = document.createElement("li");
+        li.id = "class-placeholder-text";
+        li.innerHTML =
+            '<p class="text-muted text-center py-4">No classes scheduled for this day</p>';
+        list.appendChild(li);
+        return;
+    }
+
+    todayClasses.forEach((event) => {
+                const li = document.createElement("li");
+
+                const startTime24 = convertTo24Hour(event.start);
+                const endTime24 = convertTo24Hour(event.end);
+
+                // Remove mode/duration/arrow from first class in list
+                const isFirst = list.children.length === 0;
+
+                li.innerHTML = `
+      ${isFirst ? '' : `
+      <div class="mode-duration-wrapper">
+        <select class="form-select mode-duration" aria-label="Select mode">
+          <option class="mode-option" value="1">Walk</option>
+          <option class="mode-option" value="2">Bike</option>
+          <option class="mode-option" value="3">Drive</option>
+        </select>
+        <img src="../assets/Arrow.png">
+        <div class="mode-duration">0 min</div>
+      </div>
+      `}
+      <form>
+        <input type="text" class="class-name" name="class-name" value="${escapeHtml(
+          event.name
+        )}" placeholder="Class name">
+        <input type="text" class="prof-name" name="prof-name" placeholder="Professor">
+        <input type="time" class="time" name="start-time" value="${startTime24}">
+        <input type="time" class="time" name="end-time" value="${endTime24}">
+        <input type="text" class="location" name="location" value="${escapeHtml(
+          event.location
+        )}" placeholder="Location">
+        <button class="delete-class" type="button">-</button>
+      </form>
+    `;
+    list.appendChild(li);
+
+  });
+}
+
+// ==================== TIME CONVERSION FUNCTIONS ====================
+
+function convertTo24Hour(time) {
+  // Handle if time is already a Date object
+  if (time instanceof Date) {
+    const hours = String(time.getHours()).padStart(2, "0");
+    const minutes = String(time.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
   }
 
-  // Reset file input so same file can be selected again
-  event.target.value = "";
+  // Handle string format like "9:30 AM" or "2:45 PM"
+  if (typeof time === "string") {
+    const match = time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (!match) return "00:00";
+
+    let hours = parseInt(match[1], 10);
+    const minutes = match[2];
+    const period = match[3].toUpperCase();
+
+    if (period === "PM" && hours !== 12) {
+      hours += 12;
+    } else if (period === "AM" && hours === 12) {
+      hours = 0;
+    }
+
+    return `${String(hours).padStart(2, "0")}:${minutes}`;
+  }
+
+  return "00:00";
 }
+
+function formatTime(date) {
+  if (!(date instanceof Date)) {
+    // If already formatted, return as-is
+    if (typeof date === "string" && date.match(/\d{1,2}:\d{2}\s*(AM|PM)/i)) {
+      return date;
+    }
+    return "12:00 AM";
+  }
+
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? "PM" : "AM";
+
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+
+  const minutesStr = minutes < 10 ? "0" + minutes : minutes;
+
+  return `${hours}:${minutesStr} ${ampm}`;
+}
+
+function timeToMinutes(time) {
+  // Handle Date objects
+  if (time instanceof Date) {
+    return time.getHours() * 60 + time.getMinutes();
+  }
+
+  // Handle string format "9:30 AM"
+  const timeStr = typeof time === "string" ? time : formatTime(time);
+  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+
+  if (!match) return 0;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3].toUpperCase();
+
+  if (period === "PM" && hours !== 12) {
+    hours += 12;
+  } else if (period === "AM" && hours === 12) {
+    hours = 0;
+  }
+
+  return hours * 60 + minutes;
+}
+
+// ==================== ICS PARSING ====================
 
 function parseICSForWeeklySchedule(icsText) {
   const events = [];
   const eventBlocks = icsText.split("BEGIN:VEVENT");
 
   eventBlocks.slice(1).forEach((block) => {
-    const lines = block.split("\n");
-    const event = {};
+    const lines = block.split(/\r?\n/);
+    let title = "";
+    let start = null;
+    let end = null;
+    let location = "";
 
-    lines.forEach((line) => {
+    lines.forEach((lineRaw) => {
+      const line = lineRaw.trim();
+      if (!line) return;
+
       if (line.startsWith("SUMMARY:")) {
-        event.title = line.replace("SUMMARY:", "").trim();
-      }
-      if (line.startsWith("DTSTART")) {
-        event.start = parseICSDate(line);
-      }
-      if (line.startsWith("DTEND")) {
-        event.end = parseICSDate(line);
-      }
-      if (line.startsWith("LOCATION:")) {
-        event.location = line.replace("LOCATION:", "").trim();
-      }
-      if (line.startsWith("RRULE:")) {
-        event.rrule = line.replace("RRULE:", "").trim();
+        title = line.replace("SUMMARY:", "").trim();
+      } else if (line.startsWith("DTSTART")) {
+        start = parseICSDate(line);
+      } else if (line.startsWith("DTEND")) {
+        end = parseICSDate(line);
+      } else if (line.startsWith("LOCATION:")) {
+        location = line.replace("LOCATION:", "").trim();
       }
     });
 
-    if (event.start) events.push(event);
+    if (start) {
+      const courseNumber = extractCourseNumber(title);
+      const ev = new EventData(
+        title || "Untitled Event",
+        courseNumber,
+        location || "",
+        start,
+        end
+      );
+      events.push(ev);
+    }
   });
 
-  return convertToWeeklySchedule(events);
+  localStorage.setItem("parsedEvents", JSON.stringify(events));
+  user_schedule = convertToWeeklySchedule(events);
+  return user_schedule;
 }
 
 function parseICSDate(line) {
@@ -103,11 +322,9 @@ function parseICSDate(line) {
 }
 
 function convertToWeeklySchedule(events) {
-  // Initialize 7-day array (Sunday=0 to Saturday=6)
   const weeklySchedule = [[], [], [], [], [], [], []];
   const seenClasses = new Set();
 
-  // Sort events by date
   events.sort((a, b) => a.start - b.start);
 
   for (const event of events) {
@@ -115,45 +332,25 @@ function convertToWeeklySchedule(events) {
 
     const dayOfWeek = event.start.getDay();
     const startTime = formatTime(event.start);
-    const endTime = formatTime(event.end);
+    const classKey = `${dayOfWeek}-${startTime}-${event.name}`;
 
-    // Create unique key for this class slot
-    const classKey = `${dayOfWeek}-${startTime}-${event.title}`;
-
-    // If we've seen this exact class before, we've completed the loop!
     if (seenClasses.has(classKey)) {
-      break; // EXIT - we have a full week
+      break; // Full week captured
     }
 
     seenClasses.add(classKey);
-
-    // Extract course number from title
-    const courseNumber = extractCourseNumber(event.title);
-
-    // Create EventData object
-    const eventData = new EventData(
-      event.title || "Untitled Event",
-      courseNumber,
-      event.location || "",
-      startTime,
-      endTime
-    );
-
-    weeklySchedule[dayOfWeek].push(eventData);
+    weeklySchedule[dayOfWeek].push(event);
   }
 
-  // Sort classes by start time for each day
+  // Sort each day by start time
   weeklySchedule.forEach((dayEvents) => {
-    dayEvents.sort((a, b) => {
-      return timeToMinutes(a.start) - timeToMinutes(b.start);
-    });
+    dayEvents.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
   });
 
   return weeklySchedule;
 }
 
 function extractCourseNumber(title) {
-  // Try to extract course number patterns like "CS 240", "MATH 231", etc.
   const match = title.match(/([A-Z]{2,4})\s*(\d{3})/);
   if (match) {
     return `${match[1]} ${match[2]}`;
@@ -161,32 +358,19 @@ function extractCourseNumber(title) {
   return "";
 }
 
-function formatTime(date) {
-  let hours = date.getHours();
-  const minutes = date.getMinutes();
-  const ampm = hours >= 12 ? "PM" : "AM";
+// ==================== UTILITY FUNCTIONS ====================
 
-  hours = hours % 12;
-  hours = hours ? hours : 12; // 0 should be 12
-
-  const minutesStr = minutes < 10 ? "0" + minutes : minutes;
-
-  return `${hours}:${minutesStr} ${ampm}`;
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
 }
 
-function timeToMinutes(timeStr) {
-  // Convert "9:30 AM" to minutes since midnight for sorting
-  const [time, period] = timeStr.split(" ");
-  const [hours, minutes] = time.split(":").map(Number);
+// ==================== EVENT LISTENERS ====================
 
-  let totalMinutes = minutes;
-  if (period === "PM" && hours !== 12) {
-    totalMinutes += (hours + 12) * 60;
-  } else if (period === "AM" && hours === 12) {
-    totalMinutes += 0;
-  } else {
-    totalMinutes += hours * 60;
-  }
+window.addEventListener("hashchange", displayClasses);
 
-  return totalMinutes;
-}
+// Load classes on page load
+window.addEventListener("DOMContentLoaded", () => {
+  displayClasses();
+});

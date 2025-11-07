@@ -59,6 +59,7 @@
     <nav id="main-nav" class="navbar navbar-expand-lg" aria-label="Primary">
       <div class="container-fluid">
         <a class="navbar-brand" href="../index.html">U<span style="color:#FFD966;">NAV</span>ERSITY</a>
+        <link rel="icon" href="../assets/favicon.ico">
 
         <!-- Burger toggler -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainMenu"
@@ -94,8 +95,8 @@
           </div>
           <div class="modal-body">
             <div class="d-grid gap-3">
-              <button class="btn btn-outline-primary btn-lg" data-bs-dismiss="modal" data-bs-toggle="modal"
-                data-bs-target="#manualInputModal">
+              <button id="manual-add-class" class="btn btn-outline-primary btn-lg" data-bs-dismiss="modal"
+                data-bs-toggle="modal" data-bs-target="#manualInputModal">
                 <i class="bi bi-pencil-square"></i> Enter Class Information Manually
               </button>
               <button class="btn btn-outline-primary btn-lg" data-bs-dismiss="modal"
@@ -141,28 +142,42 @@
     <!-- Mobile/Tablet "Weekdays" dropdown (shown on tablet + phone) -->
     <div id="weekdays-mobile" class="d-lg-none px-3" style="margin-top: 8rem;">
       <div class="dropdown w-100">
-        <button class="btn btn-warning w-100 rounded-3 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown"
-          data-bs-display="static" data-bs-offset="0,0" aria-expanded="false">
+        <button
+          class="btn btn-warning w-100 rounded-3 fw-bold dropdown-toggle"
+          type="button"
+          data-bs-toggle="dropdown"
+          data-bs-display="static"
+          data-bs-offset="0,0"
+          aria-expanded="false"
+          title="Keyboard shortcuts: Ctrl+1 Mon, Ctrl+2 Tue, Ctrl+3 Wed, Ctrl+4 Thu, Ctrl+5 Fri">
           Weekdays
         </button>
         <ul class="dropdown-menu w-100">
-          <li><a class="dropdown-item" href="?day=monday">MONDAY</a></li>
-          <li><a class="dropdown-item" href="?day=tuesday">TUESDAY</a></li>
-          <li><a class="dropdown-item" href="?day=wednesday">WEDNESDAY</a></li>
-          <li><a class="dropdown-item" href="?day=thursday">THURSDAY</a></li>
-          <li><a class="dropdown-item" href="?day=friday">FRIDAY</a></li>
+          <li><a class="dropdown-item" href="#monday">MONDAY</a></li>
+          <li><a class="dropdown-item" href="#tuesday">TUESDAY</a></li>
+          <li><a class="dropdown-item" href="#wednesday">WEDNESDAY</a></li>
+          <li><a class="dropdown-item" href="#thursday">THURSDAY</a></li>
+          <li><a class="dropdown-item" href="#friday">FRIDAY</a></li>
         </ul>
       </div>
     </div>
 
 
     <main>
-      Main section for classes
-      <ul id="classes">
-        <li>Example Class</li>
-        <li>Example Class</li>
-        <li>Example Class</li>
+      <ul id="class-list">
+        <!--Individual Class-->
+        <li>
+          <form>
+            <input type="text" class="class-name" name="class-name" placeholder="Class name">
+            <input type="text" class="prof-name" name="prof-name" placeholder="Professor">
+            <input type="time" class="time" name="start-time">
+            <input type="time" class="time" name="end-time">
+            <input type="text" class="location" name="location" placeholder="Location">
+            <button class="delete-class" type="button">-</button>
+          </form>
+        </li>
       </ul>
+      <button id="clear-classes" type="button">Clear All</button>
     </main>
 
     <aside id="map-background">
@@ -216,6 +231,113 @@
         syncWeekdays();
       })();
   </script>
+
+  <!--Add/Delete/Clear classes-->
+  <script>
+    // Add new class
+    document.getElementById("manual-add-class").addEventListener("click", function () {
+      const classList = document.getElementById("class-list");
+      const newClass = document.createElement("li");
+
+      // Remove placeholder text before adding class
+      const classPlaceholderText = document.getElementById("class-placeholder-text");
+      if (classPlaceholderText) {
+        classPlaceholderText.remove();
+      }
+      // Remove mode/duration/arrow from first class in list
+      const isFirst = classList.children.length === 0;
+
+      newClass.innerHTML = `
+        ${isFirst ? '' : `
+        <div class="mode-duration-wrapper">
+          <select class="form-select mode-duration" aria-label="Select mode">
+            <option class="mode-option" value="1">Walk</option>
+            <option class="mode-option" value="2">Bike</option>
+            <option class="mode-option" value="3">Drive</option>
+          </select>
+          <img src="../assets/Arrow.png">
+          <div class="mode-duration">0 min</div>
+        </div>
+        `}
+        <form>
+          <input type="text" class="class-name" name="class-name" placeholder="Class name">
+          <input type="text" class="prof-name" name="prof-name" placeholder="Professor">
+          <input type="time" class="time" name="start-time">
+          <input type="time" class="time" name="end-time">
+          <input type="text" class="location" name="location" placeholder="Location">
+          <button class="delete-class" type="button">-</button>
+        </form>
+      `;
+      classList.appendChild(newClass);
+    });
+
+    // Delete class
+    document.getElementById("class-list").addEventListener("click", function (e) {
+      if (e.target && e.target.classList.contains("delete-class")) {
+        e.preventDefault();
+        const classToDelete = e.target.closest("li");
+        classToDelete.remove();
+      }
+    });
+
+    // Clear classes
+    document.getElementById("clear-classes").addEventListener("click", function () {
+      const classList = document.getElementById("class-list");
+      classList.innerHTML = "";
+    });
+  </script>
+  <script>
+  (function () {
+    const mapNumToDay = { 1: "monday", 2: "tuesday", 3: "wednesday", 4: "thursday", 5: "friday" };
+
+    function isTypingTarget(el) {
+      return el &&
+             (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+    }
+
+    // Apply ?day= on initial load (keeps hash + display in sync if the link is shared)
+    window.addEventListener("DOMContentLoaded", () => {
+      const params = new URL(window.location).searchParams;
+      const qDay = params.get("day");
+      if (qDay) window.location.hash = qDay;
+    });
+
+    // Ctrl+1..5 to jump to Mon..Fri
+    window.addEventListener("keydown", (e) => {
+      if (!e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) return;
+
+      const n = Number(e.key);
+      if (!(n >= 1 && n <= 5)) return;
+      if (isTypingTarget(document.activeElement)) return;
+
+      e.preventDefault();
+
+      const day = mapNumToDay[n];
+
+      // Update hash for your existing hashchange/displayClasses flow
+      window.location.hash = day;
+
+      // Mirror into ?day= for shareable links, without reloading
+      const url = new URL(window.location);
+      url.searchParams.set("day", day);
+      history.replaceState(null, "", url);
+
+      // Close the Weekdays dropdown if it's open
+      const openMenu = document.querySelector("#weekdays-mobile .dropdown-menu.show");
+      if (openMenu) {
+        const toggle = document.querySelector("#weekdays-mobile [data-bs-toggle='dropdown']");
+        if (toggle) toggle.click();
+      }
+
+      // Refresh classes immediately (in case no hashchange fires)
+      if (typeof displayClasses === "function") {
+        displayClasses();
+        const list = document.getElementById("class-list");
+        if (list) list.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  })();
+</script>
 </body>
 
 </html>
