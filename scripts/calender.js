@@ -1,161 +1,181 @@
 class EventData {
-    constructor(name, number, location, start, end) {
-        this.name = name;
-        this.number = number || "";
-        this.location = location || "";
-        this.start = start; // Can be Date or formatted string
-        this.end = end;
-    }
+  constructor(name, number, location, start, end, professor) {
+    this.name = name;
+    this.number = number || "";
+    this.location = location || "";
+    this.start = start;
+    this.end = end;
+    this.professor = professor || "";
+  }
 
-    toString() {
-        return `Event: ${this.name} (Number: ${this.number}), Location: ${this.location}, Start: ${this.start}, End: ${this.end}`;
-    }
+  toString() {
+    return `Event: ${this.name} (Number: ${this.number}), Professor: ${this.professor}, Location: ${this.location}, Start: ${this.start}, End: ${this.end}`;
+  }
 }
 
 let user_schedule = undefined;
 
-
 // ==================== FILE HANDLING ====================
 
 function handleFileSelect(event) {
-    const file = event.target.files[0];
-    const modal = document.getElementById("parseReportModal");
-    const body = document.querySelector("#parseReportModal .modal-body");
-    const title = document.querySelector("#parseReportModal .modal-title");
-    body.innerHTML = getLoadingSpinner();
-    const parseReportModal = new bootstrap.Modal(modal);
-    parseReportModal.show();
+  console.log("handleFileSelect called", event.target.files); // DEBUG
+  const file = event.target.files[0];
+  const modal = document.getElementById("parseReportModal");
+  const body = document.querySelector("#parseReportModal .modal-body");
+  const title = document.querySelector("#parseReportModal .modal-title");
 
-    if (!file) {
-        title.textContent = "Error!";
-        body.innerHTML = "Could not read your file correctly. Please try again.";
-    } else {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const icsContent = e.target.result;
-            const week = parseICSForWeeklySchedule(icsContent);
+  if (!modal || !body || !title) {
+    console.error("Modal elements not found!");
+    return;
+  }
 
-            title.textContent = "Import Successful!";
-            let result =
-                "<div class='alert alert-success'>Your schedule has been imported!</div>";
+  body.innerHTML = getLoadingSpinner();
+  const parseReportModal = new bootstrap.Modal(modal);
+  parseReportModal.show();
 
-            const dayNames = [
-                "Sunday",
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday",
-                "Saturday",
-            ];
-            week.forEach((day, dayIndex) => {
-                if (day.length > 0) {
-                    result += `<strong>${dayNames[dayIndex]}:</strong><br>`;
-                    day.forEach((event) => {
-                        const startTime = formatTime(event.start);
-                        result += `&nbsp;&nbsp;• ${event.name} ${
+  if (!file) {
+    title.textContent = "Error!";
+    body.innerHTML = "Could not read your file correctly. Please try again.";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const icsContent = e.target.result;
+      console.log("ICS content loaded, length:", icsContent.length); // DEBUG
+      const week = parseICSForWeeklySchedule(icsContent);
+
+      title.textContent = "Import Successful!";
+      let result =
+        "<div class='alert alert-success'>Your schedule has been imported!</div>";
+
+      const dayNames = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      week.forEach((day, dayIndex) => {
+        if (day.length > 0) {
+          result += `<strong>${dayNames[dayIndex]}:</strong><br>`;
+          day.forEach((event) => {
+            const startTime = formatTime(event.start);
+            result += `&nbsp;&nbsp;• ${event.name} ${
               event.number ? "(#" + event.number + ")" : ""
             } at ${startTime}<br>`;
-                    });
-                }
-            });
+          });
+        }
+      });
 
-            body.innerHTML = result;
+      body.innerHTML = result;
 
-            // Refresh the display after a short delay
-            setTimeout(() => {
-                displayClasses();
-                parseReportModal.hide();
-            }, 2000);
-        };
-
-        reader.readAsText(file);
+      setTimeout(() => {
+        displayClasses();
+        parseReportModal.hide();
+      }, 2000);
+    } catch (error) {
+      console.error("Error processing ICS file:", error);
+      title.textContent = "Error!";
+      body.innerHTML = `<div class='alert alert-danger'>Failed to parse file: ${error.message}</div>`;
     }
+  };
 
-    event.target.value = "";
+  reader.onerror = function (error) {
+    console.error("FileReader error:", error);
+    title.textContent = "Error!";
+    body.innerHTML =
+      "<div class='alert alert-danger'>Failed to read file.</div>";
+  };
+
+  reader.readAsText(file);
+  event.target.value = "";
 }
 
 function getLoadingSpinner() {
-    return `
+  return `
     <div class="text-center">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
       <p class="mt-2">Processing your file...</p>
-    </div>
-  `;
+    </div>`;
 }
 
 // ==================== DISPLAY FUNCTIONS ====================
 
 function displayClasses() {
-    const list = document.getElementById("class-list");
-    if (!list) return;
+  const list = document.getElementById("class-list");
+  if (!list) {
+    console.error("class-list element not found!");
+    return;
+  }
 
-    list.innerHTML = ""; // Clear the list
+  list.innerHTML = "";
 
-    let schedule = user_schedule;
+  let schedule = user_schedule;
 
-    // Load from localStorage if not in memory
-    if (!schedule) {
-        const stored = localStorage.getItem("parsedEvents");
-        if (stored) {
-            try {
-                const events = JSON.parse(stored).map((ev) => {
-                    return new EventData(
-                        ev.name,
-                        ev.number,
-                        ev.location,
-                        new Date(ev.start),
-                        new Date(ev.end)
-                    );
-                });
-                schedule = convertToWeeklySchedule(events);
-                user_schedule = schedule;
-            } catch (e) {
-                console.error("Error loading schedule from storage:", e);
-                return;
-            }
-        }
-    }
-
-    if (!schedule) return;
-
-    // Get day index from URL hash
-    const dayMap = {
-        sunday: 0,
-        monday: 1,
-        tuesday: 2,
-        wednesday: 3,
-        thursday: 4,
-        friday: 5,
-        saturday: 6,
-    };
-    const hash = window.location.hash.slice(1).toLowerCase();
-    const dayIndex = dayMap[hash] ? ? new Date().getDay();
-    const todayClasses = schedule[dayIndex];
-
-    if (!todayClasses || todayClasses.length === 0) {
-        // Show empty state message
-        const li = document.createElement("li");
-        li.id = "class-placeholder-text";
-        li.innerHTML =
-            '<p class="text-muted text-center py-4">No classes scheduled for this day</p>';
-        list.appendChild(li);
+  if (!schedule) {
+    const stored = localStorage.getItem("parsedEvents");
+    if (stored) {
+      try {
+        const events = JSON.parse(stored).map((ev) => {
+          return new EventData(
+            ev.name,
+            ev.number,
+            ev.location,
+            new Date(ev.start),
+            new Date(ev.end),
+            ev.professor || ""
+          );
+        });
+        schedule = convertToWeeklySchedule(events);
+        user_schedule = schedule;
+      } catch (e) {
+        console.error("Error loading schedule from storage:", e);
         return;
+      }
     }
+  }
 
-    todayClasses.forEach((event) => {
-                const li = document.createElement("li");
+  if (!schedule) return;
 
-                const startTime24 = convertTo24Hour(event.start);
-                const endTime24 = convertTo24Hour(event.end);
+  const dayMap = {
+    sunday: 0,
+    monday: 1,
+    tuesday: 2,
+    wednesday: 3,
+    thursday: 4,
+    friday: 5,
+    saturday: 6,
+  };
+  const hash = window.location.hash.slice(1).toLowerCase();
+  const dayIndex = dayMap[hash] || new Date().getDay();
+  const todayClasses = schedule[dayIndex];
 
-                // Remove mode/duration/arrow from first class in list
-                const isFirst = list.children.length === 0;
+  if (!todayClasses || todayClasses.length === 0) {
+    const li = document.createElement("li");
+    li.id = "class-placeholder-text";
+    li.innerHTML =
+      '<p class="text-muted text-center py-4">No classes scheduled for this day</p>';
+    list.appendChild(li);
+    return;
+  }
 
-                li.innerHTML = `
-      ${isFirst ? '' : `
+  todayClasses.forEach((event, index) => {
+    const li = document.createElement("li");
+    const startTime24 = convertTo24Hour(event.start);
+    const endTime24 = convertTo24Hour(event.end);
+    const isFirst = list.children.length === 0;
+
+    li.innerHTML = `
+      ${
+        isFirst
+          ? ""
+          : `
       <div class="mode-duration-wrapper">
         <select class="form-select mode-duration" aria-label="Select mode">
           <option class="mode-option" value="1">Walk</option>
@@ -165,36 +185,124 @@ function displayClasses() {
         <img src="../assets/Arrow.png">
         <div class="mode-duration">0 min</div>
       </div>
-      `}
-      <form>
+      `
+      }
+      <form data-event-index="${index}">
         <input type="text" class="class-name" name="class-name" value="${escapeHtml(
           event.name
         )}" placeholder="Class name">
-        <input type="text" class="prof-name" name="prof-name" placeholder="Professor">
+        <input type="text" class="prof-name" name="prof-name" value="${escapeHtml(
+          event.professor
+        )}" placeholder="Professor">
         <input type="time" class="time" name="start-time" value="${startTime24}">
         <input type="time" class="time" name="end-time" value="${endTime24}">
         <input type="text" class="location" name="location" value="${escapeHtml(
           event.location
         )}" placeholder="Location">
         <button class="delete-class" type="button">-</button>
-      </form>
-    `;
+      </form>`;
     list.appendChild(li);
-
   });
+
+  // Add event listeners for form changes
+  attachFormListeners();
+}
+
+// ==================== SAVE CHANGES TO LOCALSTORAGE ====================
+
+function attachFormListeners() {
+  const list = document.getElementById("class-list");
+  if (!list) return;
+
+  list.addEventListener("input", function (e) {
+    if (
+      e.target.matches(
+        "input.class-name, input.prof-name, input.location, input.time"
+      )
+    ) {
+      saveScheduleChanges();
+    }
+  });
+}
+
+function saveScheduleChanges() {
+  const list = document.getElementById("class-list");
+  if (!list || !user_schedule) return;
+
+  const dayMap = {
+    sunday: 0,
+    monday: 1,
+    tuesday: 2,
+    wednesday: 3,
+    thursday: 4,
+    friday: 5,
+    saturday: 6,
+  };
+  const hash = window.location.hash.slice(1).toLowerCase();
+  const dayIndex = dayMap[hash] ?? new Date().getDay();
+
+  const forms = list.querySelectorAll("form");
+  const updatedClasses = [];
+
+  forms.forEach((form, index) => {
+    const className = form.querySelector(".class-name").value;
+    const profName = form.querySelector(".prof-name").value;
+    const location = form.querySelector(".location").value;
+    const startTime = form.querySelector('input[name="start-time"]').value;
+    const endTime = form.querySelector('input[name="end-time"]').value;
+
+    // Convert time inputs back to Date objects
+    const startDate = convertTimeToDate(startTime, dayIndex);
+    const endDate = convertTimeToDate(endTime, dayIndex);
+
+    updatedClasses.push(
+      new EventData(
+        className,
+        user_schedule[dayIndex][index]?.number || "",
+        location,
+        startDate,
+        endDate,
+        profName
+      )
+    );
+  });
+
+  // Update the schedule
+  user_schedule[dayIndex] = updatedClasses;
+
+  // Flatten and save to localStorage
+  const allEvents = [];
+  user_schedule.forEach((day) => {
+    allEvents.push(...day);
+  });
+
+  localStorage.setItem("parsedEvents", JSON.stringify(allEvents));
+  console.log("Schedule saved to localStorage"); // DEBUG
+}
+
+function convertTimeToDate(timeString, dayOfWeek) {
+  // Create a date for the given day of week with the specified time
+  const today = new Date();
+  const currentDay = today.getDay();
+  const diff = dayOfWeek - currentDay;
+  const targetDate = new Date(today);
+  targetDate.setDate(today.getDate() + diff);
+
+  const [hours, minutes] = timeString.split(":");
+  targetDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+  return targetDate;
 }
 
 // ==================== TIME CONVERSION FUNCTIONS ====================
 
 function convertTo24Hour(time) {
-  // Handle if time is already a Date object
   if (time instanceof Date) {
     const hours = String(time.getHours()).padStart(2, "0");
     const minutes = String(time.getMinutes()).padStart(2, "0");
     return `${hours}:${minutes}`;
   }
 
-  // Handle string format like "9:30 AM" or "2:45 PM"
   if (typeof time === "string") {
     const match = time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
     if (!match) return "00:00";
@@ -217,7 +325,6 @@ function convertTo24Hour(time) {
 
 function formatTime(date) {
   if (!(date instanceof Date)) {
-    // If already formatted, return as-is
     if (typeof date === "string" && date.match(/\d{1,2}:\d{2}\s*(AM|PM)/i)) {
       return date;
     }
@@ -237,12 +344,10 @@ function formatTime(date) {
 }
 
 function timeToMinutes(time) {
-  // Handle Date objects
   if (time instanceof Date) {
     return time.getHours() * 60 + time.getMinutes();
   }
 
-  // Handle string format "9:30 AM"
   const timeStr = typeof time === "string" ? time : formatTime(time);
   const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
 
@@ -296,7 +401,8 @@ function parseICSForWeeklySchedule(icsText) {
         courseNumber,
         location || "",
         start,
-        end
+        end,
+        "" // Professor field empty from ICS import
       );
       events.push(ev);
     }
@@ -335,14 +441,13 @@ function convertToWeeklySchedule(events) {
     const classKey = `${dayOfWeek}-${startTime}-${event.name}`;
 
     if (seenClasses.has(classKey)) {
-      break; // Full week captured
+      break;
     }
 
     seenClasses.add(classKey);
     weeklySchedule[dayOfWeek].push(event);
   }
 
-  // Sort each day by start time
   weeklySchedule.forEach((dayEvents) => {
     dayEvents.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
   });
@@ -370,7 +475,7 @@ function escapeHtml(text) {
 
 window.addEventListener("hashchange", displayClasses);
 
-// Load classes on page load
 window.addEventListener("DOMContentLoaded", () => {
+  console.log("DOM loaded, displaying classes"); // DEBUG
   displayClasses();
 });
