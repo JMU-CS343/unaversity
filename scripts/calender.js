@@ -127,7 +127,7 @@ function convertToWeeklySchedule(events) {
 
     seenClasses.add(classKey);
 
-    // Extract course number from title if it exists (e.g., "CS 240" from "CS 240 - Data Structures")
+    // Extract course number from title
     const courseNumber = extractCourseNumber(event.title);
 
     // Create EventData object
