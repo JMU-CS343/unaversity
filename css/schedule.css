@@ -181,7 +181,13 @@ main ul {
     font-weight: bold;
     border-radius: 10px;
     margin-top: 3rem;
+    color: var(--text-color);
+    border: none;
+}
 
+.mode-option {
+    text-align: left;
+    color: var(--text-color);
 }
 
 .mode-duration-wrapper {
