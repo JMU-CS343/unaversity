@@ -95,8 +95,8 @@
           </div>
           <div class="modal-body">
             <div class="d-grid gap-3">
-              <button id="manual-add-class" class="btn btn-outline-primary btn-lg" data-bs-dismiss="modal" data-bs-toggle="modal"
-                data-bs-target="#manualInputModal">
+              <button id="manual-add-class" class="btn btn-outline-primary btn-lg" data-bs-dismiss="modal"
+                data-bs-toggle="modal" data-bs-target="#manualInputModal">
                 <i class="bi bi-pencil-square"></i> Enter Class Information Manually
               </button>
               <button class="btn btn-outline-primary btn-lg" data-bs-dismiss="modal"
@@ -238,20 +238,36 @@
     document.getElementById("manual-add-class").addEventListener("click", function () {
       const classList = document.getElementById("class-list");
       const newClass = document.createElement("li");
+
+      // Remove placeholder text before adding class
+      const classPlaceholderText = document.getElementById("class-placeholder-text");
+      if (classPlaceholderText) {
+        classPlaceholderText.remove();
+      }
+      // Remove mode/duration/arrow from first class in list
+      const isFirst = classList.children.length === 0;
+
       newClass.innerHTML = `
-      <div class="mode-duration-wrapper">
-        <div class="mode-duration">Walk</div>
-        <img src="../assets/Arrow.png">
-        <div class="mode-duration">0 min</div>
-      </div>
-      <form>
-        <input type="text" class="class-name" name="class-name" placeholder="Class name">
-        <input type="text" class="prof-name" name="prof-name" placeholder="Professor">
-        <input type="time" class="time" name="start-time">
-        <input type="time" class="time" name="end-time">
-        <input type="text" class="location" name="location" placeholder="Location">
-        <button class="delete-class" type="button">-</button>
-      </form>`
+        ${isFirst ? '' : `
+        <div class="mode-duration-wrapper">
+          <select class="form-select mode-duration" aria-label="Select mode">
+            <option class="mode-option" value="1">Walk</option>
+            <option class="mode-option" value="2">Bike</option>
+            <option class="mode-option" value="3">Drive</option>
+          </select>
+          <img src="../assets/Arrow.png">
+          <div class="mode-duration">0 min</div>
+        </div>
+        `}
+        <form>
+          <input type="text" class="class-name" name="class-name" placeholder="Class name">
+          <input type="text" class="prof-name" name="prof-name" placeholder="Professor">
+          <input type="time" class="time" name="start-time">
+          <input type="time" class="time" name="end-time">
+          <input type="text" class="location" name="location" placeholder="Location">
+          <button class="delete-class" type="button">-</button>
+        </form>
+      `;
       classList.appendChild(newClass);
     });
 

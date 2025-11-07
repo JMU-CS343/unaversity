@@ -138,6 +138,7 @@ function displayClasses() {
   if (!todayClasses || todayClasses.length === 0) {
     // Show empty state message
     const li = document.createElement("li");
+    li.id = "class-placeholder-text";
     li.innerHTML =
       '<p class="text-muted text-center py-4">No classes scheduled for this day</p>';
     list.appendChild(li);
@@ -145,40 +146,26 @@ function displayClasses() {
   }
 
   todayClasses.forEach((event) => {
-    /*
-    const li = document.createElement("li");
-    const form = document.createElement("form");
-
-    const startTime24 = convertTo24Hour(event.start);
-    const endTime24 = convertTo24Hour(event.end);
-
-    form.innerHTML = `
-      <input type="text" class="class-name" name="class-name" value="${escapeHtml(
-        event.name
-      )}" placeholder="Class name">
-      <input type="text" class="prof-name" name="prof-name" placeholder="Professor">
-      <input type="time" class="time" name="start-time" value="${startTime24}">
-      <input type="time" class="time" name="end-time" value="${endTime24}">
-      <input type="text" class="location" name="location" value="${escapeHtml(
-        event.location
-      )}" placeholder="Location">
-      <button class="delete-class" type="button">-</button>
-    `;
-    li.appendChild(form);
-    list.appendChild(li);
-    */
-
     const li = document.createElement("li");
 
     const startTime24 = convertTo24Hour(event.start);
     const endTime24 = convertTo24Hour(event.end);
+
+    // Remove mode/duration/arrow from first class in list
+    const isFirst = list.children.length === 0;
 
     li.innerHTML = `
+      ${isFirst ? '' : `
       <div class="mode-duration-wrapper">
-        <div class="mode-duration">Walk</div>
+        <select class="form-select mode-duration" aria-label="Select mode">
+          <option class="mode-option" value="1">Walk</option>
+          <option class="mode-option" value="2">Bike</option>
+          <option class="mode-option" value="3">Drive</option>
+        </select>
         <img src="../assets/Arrow.png">
         <div class="mode-duration">0 min</div>
       </div>
+      `}
       <form>
         <input type="text" class="class-name" name="class-name" value="${escapeHtml(
           event.name
