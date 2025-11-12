@@ -2,10 +2,31 @@ class EventData {
   constructor(name, number, location, start, end, professor) {
     this.name = name;
     this.number = number || "";
-    this.location = location || "";
+
+    // Parse location into building + room
+    if (typeof location === "string") {
+      const parsed = parseLocation(location);
+      this.building = parsed.building;
+      this.room = parsed.room;
+      this.locationUnrecognized = parsed.unrecognized || false;
+    } else if (location && typeof location === "object") {
+      this.building = location.building || "";
+      this.room = location.room || "";
+      this.locationUnrecognized = location.unrecognized || false;
+    } else {
+      this.building = "";
+      this.room = "";
+      this.locationUnrecognized = false;
+    }
+
     this.start = start;
     this.end = end;
     this.professor = professor || "";
+  }
+
+  // Getter for display/storage
+  get location() {
+    return this.room ? `${this.building} - ${this.room}` : this.building;
   }
 
   toString() {
@@ -14,6 +35,72 @@ class EventData {
 }
 
 let user_schedule = undefined;
+
+// ==================== LOCATION PARSING ====================
+
+function parseLocation(locationString) {
+  if (!locationString || locationString.trim() === "") {
+    return { building: "", room: "", unrecognized: false };
+  }
+
+  const trimmed = locationString.trim();
+
+  // Check if format is "Building - Room" (user-entered format)
+  if (trimmed.includes(" - ")) {
+    const [building, room] = trimmed.split(" - ").map((s) => s.trim());
+    const recognized = isBuildingRecognized(building);
+    return { building, room, unrecognized: !recognized };
+  }
+
+  // Check if format is "Building Room" (ICS format like "King Hall 150")
+  const parts = trimmed.split(/\s+/);
+  const possibleRoom = parts[parts.length - 1];
+
+  // If last part looks like a room number
+  if (/^\d+[A-Z]?$/i.test(possibleRoom)) {
+    const room = possibleRoom;
+    const building = parts.slice(0, -1).join(" ");
+    const recognized = isBuildingRecognized(building);
+    return { building, room, unrecognized: !recognized };
+  }
+
+  // Entire string is the building name
+  const recognized = isBuildingRecognized(trimmed);
+  return { building: trimmed, room: "", unrecognized: !recognized };
+}
+
+function isBuildingRecognized(buildingName) {
+  if (!buildingName) return false;
+
+  // Exact match
+  if (BUILDINGS[buildingName]) return true;
+
+  // Case-insensitive match
+  const upperBuilding = buildingName.toUpperCase();
+  for (const knownBuilding in BUILDINGS) {
+    if (knownBuilding.toUpperCase() === upperBuilding) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function getBuildingCoordinates(buildingName) {
+  if (BUILDINGS[buildingName]) {
+    return BUILDINGS[buildingName];
+  }
+
+  // Try case-insensitive match
+  const upperBuilding = buildingName.toUpperCase();
+  for (const knownBuilding in BUILDINGS) {
+    if (knownBuilding.toUpperCase() === upperBuilding) {
+      return BUILDINGS[knownBuilding];
+    }
+  }
+
+  return null;
+}
 
 // ==================== FILE HANDLING ====================
 
@@ -126,7 +213,7 @@ function displayClasses() {
           return new EventData(
             ev.name,
             ev.number,
-            ev.location,
+            ev.location || { building: ev.building || "", room: ev.room || "" },
             new Date(ev.start),
             new Date(ev.end),
             ev.professor || ""
@@ -171,6 +258,14 @@ function displayClasses() {
     const endTime24 = convertTo24Hour(event.end);
     const isFirst = list.children.length === 0;
 
+    // Add warning class if building is unrecognized
+    const locationClass = event.locationUnrecognized
+      ? "location location-warning"
+      : "location";
+    const warningMessage = event.locationUnrecognized
+      ? '<div class="location-warning-message">⚠️ Building not recognized!</div>'
+      : "";
+
     li.innerHTML = `
       ${
         isFirst
@@ -182,8 +277,8 @@ function displayClasses() {
           <option class="mode-option" value="2">Bike</option>
           <option class="mode-option" value="3">Drive</option>
         </select>
-        <img src="../assets/Arrow.png">
-        <div class="mode-duration">0 min</div>
+        <img class="route-arrow" onclick="arrowClick(event)"src="../assets/Arrow.png">
+        <div class="mode-duration output-time">0 min</div>
       </div>
       `
       }
@@ -196,9 +291,12 @@ function displayClasses() {
         )}" placeholder="Professor">
         <input type="time" class="time" name="start-time" value="${startTime24}">
         <input type="time" class="time" name="end-time" value="${endTime24}">
-        <input type="text" class="location" name="location" value="${escapeHtml(
-          event.location
-        )}" placeholder="Location">
+        <div class="location-wrapper">
+          <input type="text" class="${locationClass}" name="location" value="${escapeHtml(
+      event.location
+    )}" placeholder="Location" list="buildings">
+          ${warningMessage}
+        </div>
         <button class="delete-class" type="button">-</button>
       </form>`;
     list.appendChild(li);
@@ -215,14 +313,61 @@ function attachFormListeners() {
   if (!list) return;
 
   list.addEventListener("input", function (e) {
-    if (
-      e.target.matches(
-        "input.class-name, input.prof-name, input.location, input.time"
-      )
-    ) {
+    if (e.target.matches("input.class-name, input.prof-name, input.time")) {
+      saveScheduleChanges();
+    }
+
+    // Validate location on input
+    if (e.target.matches("input.location")) {
+      validateLocationInput(e.target);
       saveScheduleChanges();
     }
   });
+
+  // Also validate on blur
+  list.addEventListener(
+    "blur",
+    function (e) {
+      if (e.target.matches("input.location")) {
+        validateLocationInput(e.target);
+      }
+    },
+    true
+  );
+}
+
+function validateLocationInput(input) {
+  const value = input.value.trim();
+  const wrapper = input.closest(".location-wrapper") || input.parentElement;
+  let warningMsg = wrapper.querySelector(".location-warning-message");
+
+  if (!value) {
+    input.classList.remove("location-warning");
+    if (warningMsg) warningMsg.remove();
+    return;
+  }
+
+  const parsed = parseLocation(value);
+
+  if (parsed.unrecognized) {
+    input.classList.add("location-warning");
+
+    // Add warning message if it doesn't exist
+    if (!warningMsg) {
+      warningMsg = document.createElement("div");
+      warningMsg.className = "location-warning-message";
+      warningMsg.textContent = "⚠️ Building not recognized!";
+      wrapper.appendChild(warningMsg);
+    }
+  } else {
+    input.classList.remove("location-warning");
+    if (warningMsg) warningMsg.remove();
+
+    // Normalize the format
+    if (parsed.room) {
+      input.value = `${parsed.building} - ${parsed.room}`;
+    }
+  }
 }
 
 function saveScheduleChanges() {
@@ -247,7 +392,8 @@ function saveScheduleChanges() {
   forms.forEach((form, index) => {
     const className = form.querySelector(".class-name").value;
     const profName = form.querySelector(".prof-name").value;
-    const location = form.querySelector(".location").value;
+    const locationInput = form.querySelector(".location");
+    const location = locationInput.value;
     const startTime = form.querySelector('input[name="start-time"]').value;
     const endTime = form.querySelector('input[name="end-time"]').value;
 
@@ -471,11 +617,26 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// ==================== EVENT LISTENERS ====================
+// ==================== INITIALIZATION ====================
 
 window.addEventListener("hashchange", displayClasses);
 
 window.addEventListener("DOMContentLoaded", () => {
   console.log("DOM loaded, displaying classes"); // DEBUG
+
+  // Create datalist for building autocomplete
+  if (!document.getElementById("buildings")) {
+    const datalist = document.createElement("datalist");
+    datalist.id = "buildings";
+    Object.keys(BUILDINGS)
+      .sort()
+      .forEach((building) => {
+        const option = document.createElement("option");
+        option.value = building;
+        datalist.appendChild(option);
+      });
+    document.body.appendChild(datalist);
+  }
+
   displayClasses();
 });

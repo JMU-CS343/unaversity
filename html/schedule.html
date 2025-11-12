@@ -11,6 +11,7 @@
 
   <!-- Shared global styles (navbar, hero, etc.) -->
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="../scripts/data.js"></script>
   <script src="../scripts/calender.js"></script>
 
   <link rel="stylesheet" href="../css/schedule.css">
@@ -142,13 +143,8 @@
     <!-- Mobile/Tablet "Weekdays" dropdown (shown on tablet + phone) -->
     <div id="weekdays-mobile" class="d-lg-none px-3" style="margin-top: 8rem;">
       <div class="dropdown w-100">
-        <button
-          class="btn btn-warning w-100 rounded-3 fw-bold dropdown-toggle"
-          type="button"
-          data-bs-toggle="dropdown"
-          data-bs-display="static"
-          data-bs-offset="0,0"
-          aria-expanded="false"
+        <button class="btn btn-warning w-100 rounded-3 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown"
+          data-bs-display="static" data-bs-offset="0,0" aria-expanded="false"
           title="Keyboard shortcuts: Ctrl+1 Mon, Ctrl+2 Tue, Ctrl+3 Wed, Ctrl+4 Thu, Ctrl+5 Fri">
           Weekdays
         </button>
@@ -186,7 +182,6 @@
         <div id="route-time">Total Time Placeholder</div>
         <div id="route-dist">Total Dist Placeholder</div>
       </div>
-      <button id="debug-button">DEBUG: King to E-HALL</button>
     </aside>
   </div>
 
@@ -255,8 +250,8 @@
             <option class="mode-option" value="2">Bike</option>
             <option class="mode-option" value="3">Drive</option>
           </select>
-          <img src="../assets/Arrow.png">
-          <div class="mode-duration">0 min</div>
+          <img class="route-arrow" onclick="arrowClick(event)" src="../assets/Arrow.png">
+          <div class="mode-duration output-time">0 min</div>
         </div>
         `}
         <form>
@@ -264,7 +259,7 @@
           <input type="text" class="prof-name" name="prof-name" placeholder="Professor">
           <input type="time" class="time" name="start-time">
           <input type="time" class="time" name="end-time">
-          <input type="text" class="location" name="location" placeholder="Location">
+          <input type="text" class="location" name="location" placeholder="Location" list="buildings">
           <button class="delete-class" type="button">-</button>
         </form>
       `;
@@ -287,57 +282,80 @@
     });
   </script>
   <script>
-  (function () {
-    const mapNumToDay = { 1: "monday", 2: "tuesday", 3: "wednesday", 4: "thursday", 5: "friday" };
+    (function () {
+      const mapNumToDay = {
+        1: "monday",
+        2: "tuesday",
+        3: "wednesday",
+        4: "thursday",
+        5: "friday"
+      };
 
-    function isTypingTarget(el) {
-      return el &&
-             (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
-    }
-
-    // Apply ?day= on initial load (keeps hash + display in sync if the link is shared)
-    window.addEventListener("DOMContentLoaded", () => {
-      const params = new URL(window.location).searchParams;
-      const qDay = params.get("day");
-      if (qDay) window.location.hash = qDay;
-    });
-
-    // Ctrl+1..5 to jump to Mon..Fri
-    window.addEventListener("keydown", (e) => {
-      if (!e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) return;
-
-      const n = Number(e.key);
-      if (!(n >= 1 && n <= 5)) return;
-      if (isTypingTarget(document.activeElement)) return;
-
-      e.preventDefault();
-
-      const day = mapNumToDay[n];
-
-      // Update hash for your existing hashchange/displayClasses flow
-      window.location.hash = day;
-
-      // Mirror into ?day= for shareable links, without reloading
-      const url = new URL(window.location);
-      url.searchParams.set("day", day);
-      history.replaceState(null, "", url);
-
-      // Close the Weekdays dropdown if it's open
-      const openMenu = document.querySelector("#weekdays-mobile .dropdown-menu.show");
-      if (openMenu) {
-        const toggle = document.querySelector("#weekdays-mobile [data-bs-toggle='dropdown']");
-        if (toggle) toggle.click();
+      function isTypingTarget(el) {
+        return el &&
+          (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
       }
 
-      // Refresh classes immediately (in case no hashchange fires)
-      if (typeof displayClasses === "function") {
-        displayClasses();
-        const list = document.getElementById("class-list");
-        if (list) list.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    });
-  })();
-</script>
+      // Apply ?day= on initial load (keeps hash + display in sync if the link is shared)
+      window.addEventListener("DOMContentLoaded", () => {
+        const params = new URL(window.location).searchParams;
+        const qDay = params.get("day");
+        if (qDay) window.location.hash = qDay;
+
+
+        //=====AUTO COMPLETE CODE=====
+        if (!document.getElementById('buildings')) {
+          const datalist = document.createElement('datalist');
+          datalist.id = 'buildings';
+          Object.keys(BUILDINGS).forEach(building => {
+            const option = document.createElement('option');
+            option.value = building;
+            datalist.appendChild(option);
+          });
+          document.body.appendChild(datalist);
+        }
+      });
+
+      // Ctrl+1..5 to jump to Mon..Fri
+      window.addEventListener("keydown", (e) => {
+        if (!e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) return;
+
+        const n = Number(e.key);
+        if (!(n >= 1 && n <= 5)) return;
+        if (isTypingTarget(document.activeElement)) return;
+
+        e.preventDefault();
+
+        const day = mapNumToDay[n];
+
+        // Update hash for your existing hashchange/displayClasses flow
+        window.location.hash = day;
+
+        // Mirror into ?day= for shareable links, without reloading
+        const url = new URL(window.location);
+        url.searchParams.set("day", day);
+        history.replaceState(null, "", url);
+
+        // Close the Weekdays dropdown if it's open
+        const openMenu = document.querySelector("#weekdays-mobile .dropdown-menu.show");
+        if (openMenu) {
+          const toggle = document.querySelector("#weekdays-mobile [data-bs-toggle='dropdown']");
+          if (toggle) toggle.click();
+        }
+
+        // Refresh classes immediately (in case no hashchange fires)
+        if (typeof displayClasses === "function") {
+          displayClasses();
+          const list = document.getElementById("class-list");
+          if (list) list.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+        }
+      });
+    })();
+  </script>
 </body>
+
 
 </html>

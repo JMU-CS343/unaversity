@@ -2,6 +2,67 @@ let map;
 let directionsService;
 let directionsRenderer;
 
+function arrowClick(event) {
+  // Get the current arrow element (the one that was clicked)
+  const arrow = event.target;
+
+  // Get the parent <li> element of the arrow (the wrapper that holds the forms)
+  const listItem = arrow.closest("li");
+
+  // Find the previous and next <form> elements (forms surrounding the arrow)
+  const previousForm = listItem.previousElementSibling.querySelector("form");
+  const nextForm = listItem;
+
+  //DEBUG
+  if (previousForm) {
+    console.log("Previous Form:", previousForm);
+  }
+
+  if (nextForm) {
+    console.log("Next Form:", nextForm);
+  }
+
+  const from = getBuildingCoords(previousForm.querySelector(".location").value);
+  console.log(
+    "from: " +
+      previousForm.querySelector(".location").value +
+      previousForm.querySelector(".class-name").value
+  );
+  const to = getBuildingCoords(nextForm.querySelector(".location").value);
+  console.log("to: " + nextForm.querySelector(".location").value);
+
+  const select = listItem.querySelector(".mode-duration-wrapper select");
+  const travelMode = getTravelMode(select);
+  route(from, to, travelMode, listItem.querySelector(".output-time"));
+}
+
+function getBuildingCoords(locationInput) {
+  for (const building in BUILDINGS) {
+    // Check if the location starts with the building name
+    if (locationInput.trim().toLowerCase().startsWith(building.toLowerCase())) {
+      return BUILDINGS[building];
+    }
+  }
+  return null; // no match
+}
+
+function getTravelMode(selectElement) {
+  // Get the selected numeric value from the <select>
+  const value = selectElement.value;
+
+  switch (value) {
+    case "1":
+      return google.maps.TravelMode.WALKING;
+    case "2":
+      return google.maps.TravelMode.BICYCLING;
+    case "3":
+      return google.maps.TravelMode.DRIVING;
+    default:
+      console.warn("Unknown travel mode value:", value);
+      return google.maps.TravelMode.WALKING;
+  }
+}
+
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
     zoom: 16,
@@ -28,9 +89,12 @@ function initMap() {
 // 38.431346433308136, -78.86144245742665 -E-hALL
 
 //from and to should be formatted as {lat, long} how is google.maps.TravelMode DRIVING, WALKING, BICYCLING, TRANSIT
-function route(from, to, how) {
+function route(from, to, how, elem = undefined) {
   const time = document.getElementById("route-time");
   const dist = document.getElementById("route-dist");
+  if (elem != undefined) {
+    spin(elem);
+  }
   spin(time);
   spin(dist);
   // Define your route request
@@ -48,6 +112,9 @@ function route(from, to, how) {
       const distance = route.distance.text; // e.g., "1.2 mi"
       const duration = route.duration.text; // e.g., "5 mins"
       time.textContent = `Total Time: ${duration}`;
+      if (elem != undefined) {
+        elem.textContent = `${duration}`;
+      }
       dist.textContent = `Total Distance: ${distance}`;
 
       const distanceInMeters = route.distance.value; // e.g., 1932

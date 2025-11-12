@@ -109,6 +109,36 @@ form {
     font-size: xx-large;
 }
 
+
+/* Location warning styling */
+
+.location-wrapper {
+    position: relative;
+    width: 90%;
+    margin: 0 5%;
+}
+
+.location-warning {
+    border: 3px solid #ff9800 !important;
+}
+
+.location-warning:focus {
+    border-color: #ff6f00 !important;
+    box-shadow: 0 0 0 0.2rem rgba(255, 152, 0, 0.3) !important;
+}
+
+.location-warning-message {
+    background-color: #ff9800;
+    color: white;
+    padding: 0.5rem 0.3rem;
+    margin: 0.5rem auto;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: center;
+    max-width: 80%;
+}
+
 .prof-name {
     background-color: var(--nav-background-color);
     color: white;
@@ -152,7 +182,6 @@ main ul {
     right: 0.5rem;
     border-radius: 50px;
     font-weight: bolder;
-
     display: flex;
     justify-content: center;
     align-items: center;
@@ -165,6 +194,7 @@ main ul {
     font-size: large;
     bottom: 1rem;
 }
+
 
 /* Travel mode and duration between individual classes */
 
