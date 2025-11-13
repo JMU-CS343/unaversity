@@ -277,7 +277,7 @@ function displayClasses() {
           <option class="mode-option" value="2">Bike</option>
           <option class="mode-option" value="3">Drive</option>
         </select>
-        <img class="route-arrow" onclick="arrowClick(event)"src="../assets/Arrow.png">
+        <img class="route-arrow" onclick="arrowClick(event)" src="../assets/Arrow.png">
         <div class="mode-duration output-time">0 min</div>
       </div>
       `
