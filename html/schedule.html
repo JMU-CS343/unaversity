@@ -55,6 +55,12 @@
 </head>
 
 <body>
+  <!-- Skip links (accessibility) -->
+  <div class="skip-links">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <a class="skip-link skip-to-map" href="#map">Skip to map</a>
+  </div>
+
   <header>
     <!-- Expands at lg and up; collapses below lg (phones + iPad) -->
     <nav id="main-nav" class="navbar navbar-expand-lg" aria-label="Primary">
@@ -159,7 +165,7 @@
     </div>
 
 
-    <main>
+    <main id="main-content">
       <ul id="class-list">
         <!--Individual Class-->
         <li>
@@ -355,6 +361,41 @@
       });
     })();
   </script>
+  <script>
+  // Highlight whichever day is currently selected (via hash).
+  (function () {
+    const dayMap = { monday:1, tuesday:2, wednesday:3, thursday:4, friday:5,
+                     sunday:0, saturday:6 };
+    const days = Object.keys(dayMap);
+
+    function normalizeHashToDay() {
+      const h = (location.hash || "").slice(1).toLowerCase();
+      if (dayMap.hasOwnProperty(h)) return h;
+      // fallback to real today if no/invalid hash
+      return days[new Date().getDay()];
+    }
+
+    function updateActiveDay() {
+      const active = normalizeHashToDay();
+
+      // Desktop: side list items
+      document.querySelectorAll('#week-nav li').forEach(li => li.classList.remove('is-active'));
+      const sideLink = document.querySelector(`#week-nav a[href="#${active}"]`);
+      if (sideLink) sideLink.parentElement.classList.add('is-active');
+
+      // Mobile dropdown items
+      document.querySelectorAll('#weekdays-mobile .dropdown-menu .dropdown-item').forEach(a => {
+        a.classList.remove('active'); a.removeAttribute('aria-current');
+      });
+      const ddLink = document.querySelector(`#weekdays-mobile .dropdown-menu a[href="#${active}"]`);
+      if (ddLink) { ddLink.classList.add('active'); ddLink.setAttribute('aria-current','true'); }
+    }
+
+    window.addEventListener('hashchange', updateActiveDay);
+    window.addEventListener('DOMContentLoaded', updateActiveDay);
+  })();
+</script>
+
 </body>
 
 
