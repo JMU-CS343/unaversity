@@ -43,7 +43,7 @@ const BUILDINGS = {
   "East Campus Dining Hall (E-Hall)": { lat: 38.43118872194496, lng: -78.86116610417501 },
   "East Campus Power Plant": { lat: 38.432075, lng: -78.864086 },
   "Edith J. Carrier Arboretum Pavilion": { lat: 38.430017, lng: -78.861951 },
-  "Engineering/Geosciences Building": { lat: 38.434262, lng: -78.862161 },
+  "Engineering/Geosciences": { lat: 38.434262, lng: -78.862161 },
   "Estes Center for Theatre and Dance": { lat: 38.439699, lng: -78.876779 },
   "Festival Conference and Student Center": { lat: 38.432791, lng: -78.859566 },
   "Forbes Center for the Performing Arts": { lat: 38.439699, lng: -78.876779 },

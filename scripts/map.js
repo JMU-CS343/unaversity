@@ -92,11 +92,24 @@ function initMap() {
 function route(from, to, how, elem = undefined) {
   const time = document.getElementById("route-time");
   const dist = document.getElementById("route-dist");
+
   if (elem != undefined) {
     spin(elem);
   }
   spin(time);
   spin(dist);
+
+  // Set a timeout to handle non-responsive API
+  const timeoutId = setTimeout(() => {
+    // Stop spinners and show error message
+    if (elem != undefined) {
+      elem.textContent = "Unable to calculate";
+    }
+    time.textContent = "Google Maps is not responding. Please try again later.";
+    dist.textContent = "Route information unavailable";
+    console.error("Google Maps API request timed out");
+  }, 10000); // 10 second timeout
+
   // Define your route request
   const request = {
     origin: from,
@@ -106,11 +119,15 @@ function route(from, to, how, elem = undefined) {
 
   // Request and display the route
   directionsService.route(request, (result, status) => {
+    // Clear the timeout since we got a response
+    clearTimeout(timeoutId);
+
     if (status === "OK") {
       directionsRenderer.setDirections(result);
       const route = result.routes[0].legs[0];
       const distance = route.distance.text; // e.g., "1.2 mi"
       const duration = route.duration.text; // e.g., "5 mins"
+
       time.textContent = `Total Time: ${duration}`;
       if (elem != undefined) {
         elem.textContent = `${duration}`;
@@ -119,9 +136,17 @@ function route(from, to, how, elem = undefined) {
 
       const distanceInMeters = route.distance.value; // e.g., 1932
       const durationInSeconds = route.duration.value; // e.g., 300
+
       console.log("Distance:", distance);
       console.log("Duration:", duration);
     } else {
+      // Handle API errors
+      if (elem != undefined) {
+        elem.textContent = "0 min";
+      }
+      time.textContent = `Total Time: 0 min`;
+      dist.textContent = `Total Distance: 0 mi`;
+      alert("Google Maps appears to not be responding");
       console.error("Directions request failed due to " + status);
     }
   });
