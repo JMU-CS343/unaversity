@@ -396,6 +396,23 @@
   })();
 </script>
 
+  <!-- Skip-to-map: smooth scroll without changing the hash -->
+  <script>
+    (function () {
+      const skipLink = document.querySelector('.skip-link.skip-to-map');
+      const mapEl = document.getElementById('map');
+      if (!skipLink || !mapEl) return;
+
+      skipLink.addEventListener('click', function (e) {
+        e.preventDefault();
+        mapEl.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      });
+    })();
+  </script>
+
 </body>
 
 
