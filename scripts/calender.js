@@ -75,33 +75,18 @@ function generateQr() {
   qrContainer.innerHTML = getLoadingSpinner();
 
   const json = localStorage.getItem("weeklySchedule");
-  const payload = encodeURIComponent(json);
+  const shareUrl = `https://unaversity.netlify.app/?data=${json}`;
 
-  // Create the full URL with the schedule data
-  const shareUrl = `https://unaversity.netlify.app/?data=${payload}`;
+  console.log("URL length:", shareUrl.length);
+  console.log(
+    "QR API URL:",
+    `https://quickchart.io/qr?text=${encodeURIComponent(shareUrl)}&size=600`
+  );
 
-  // Generate QR code pointing to that URL
-  const qrImg = document.createElement("img");
-  qrImg.src = `https://quickchart.io/qr?text=${encodeURIComponent(
+  qrContainer.src = `https://quickchart.io/qr?text=${encodeURIComponent(
     shareUrl
   )}&size=300`;
-  qrImg.alt = "QR Code for Schedule";
-  qrImg.style.maxWidth = "100%";
-
-  qrContainer.innerHTML = "";
-  qrContainer.appendChild(qrImg);
-}
-
-function downloadQr() {
-  const qrContainer = document.getElementById("qr-container");
-  if (qrContainer.innerHTML == "") {
-    return;
-  }
-
-  const link = document.createElement("a");
-  link.href = qrContainer.src;
-  link.download = "schedule-qr.png";
-  link.click();
+  qrContainer.alt = "QR Code for Schedule";
 }
 
 // ==================== LOCATION PARSING ====================

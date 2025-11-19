@@ -442,6 +442,28 @@ main ul {
         width: min(46rem, 92vw);
         order: 2;
     }
+    #qr-container {
+        display: flex !important;
+        /* Force it to show for testing */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        z-index: 1001;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+    #qr-container h1 {
+        color: white;
+        margin-bottom: 2rem;
+    }
+    #qr-container img {
+        max-width: 80vmin;
+        max-height: 80vmin;
+    }
     /* hide the qr button on phones */
     #qr-code-btn {
         display: none;

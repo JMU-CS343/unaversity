@@ -134,18 +134,15 @@
     <input type="file" id="icsFileInput" accept=".ics" style="display: none;" onchange="handleFileSelect(event)">
 
     <div class="modal fade" id="qr-code-modal">
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered modal-m">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Scan or Download for your Schedule</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body text-center d-flex flex-column align-items-center">
-            <img id="qr-container">
-            <p>You may need a Hi-Rez screen to view properly</p>
-            <button onclick="downloadQr()" class="btn btn-primary">
-              <i class="bi bi-download"></i> Download
-            </button>
+          <div class="modal-body text-center">
+
+            <img id="qr-container" style="max-width: 100vh; height: auto;">
           </div>
         </div>
       </div>
