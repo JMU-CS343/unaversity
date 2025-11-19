@@ -94,10 +94,11 @@ main {
 #stats {
     background-color: var(--main-cream-color);
     border-radius: 50px;
-    width: 45rem;
+    max-width: 45rem;
+    width: 100%;
     padding: 2rem;
     margin: 1rem;
-    height: 45rem;
+    height: auto;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
@@ -111,6 +112,7 @@ main {
     border-radius: 25px;
     color: var(--text-color);
     width: 10rem;
+    height: 12.75rem;
 }
 
 .row1 {
