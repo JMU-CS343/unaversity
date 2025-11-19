@@ -18,6 +18,12 @@
   <link rel="stylesheet" href="../css/transitions.css">
   <link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet">
 
+  <!--QR CODE IMPORTING-->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+
+
+
   <!-- MAP STUFF (CSS first) -->
   <link rel="stylesheet" href="../css/map.css">
 
@@ -92,8 +98,8 @@
       data-bs-target="#addClassModal">
       +
     </button>
-    <button id="qr-code-btn" class="btn btn-success rounded-circle mt-5" style="right: 5rem;" title="Generate QR Code"
-      data-bs-toggle="modal" data-bs-target="#qr-code-modal">
+    <button onclick="generateQr()" id="qr-code-btn" class="btn btn-success rounded-circle mt-5" style="right: 5rem;"
+      title="Generate QR Code" data-bs-toggle="modal" data-bs-target="#qr-code-modal">
       <i class="bi bi-qr-code"></i>
     </button>
     <!-- Set manual input modal to have class manualInputModal to work with the button-->
@@ -114,6 +120,9 @@
                 onclick="document.getElementById('icsFileInput').click()">
                 <i class="bi bi-file-earmark-arrow-up"></i> Import from ICS File
               </button>
+              <button onclick="importQr()" class="btn btn-outline-primary btn-lg" data-bs-dismiss="modal">
+                <i class="bi bi-qr-code"></i> Import from QR Code
+              </button>
             </div>
           </div>
         </div>
@@ -131,9 +140,10 @@
             <h5 class="modal-title">Scan or Download for your Schedule</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body">
-            <div id="qr-container"></div>
-            <button class="btn btn-primary">
+          <div class="modal-body text-center d-flex flex-column align-items-center">
+            <img id="qr-container">
+            <p>You may need a Hi-Rez screen to view properly</p>
+            <button onclick="downloadQr()" class="btn btn-primary">
               <i class="bi bi-download"></i> Download
             </button>
           </div>
@@ -385,39 +395,50 @@
     })();
   </script>
   <script>
-  // Highlight whichever day is currently selected (via hash).
-  (function () {
-    const dayMap = { monday:1, tuesday:2, wednesday:3, thursday:4, friday:5,
-                     sunday:0, saturday:6 };
-    const days = Object.keys(dayMap);
+    // Highlight whichever day is currently selected (via hash).
+    (function () {
+      const dayMap = {
+        monday: 1,
+        tuesday: 2,
+        wednesday: 3,
+        thursday: 4,
+        friday: 5,
+        sunday: 0,
+        saturday: 6
+      };
+      const days = Object.keys(dayMap);
 
-    function normalizeHashToDay() {
-      const h = (location.hash || "").slice(1).toLowerCase();
-      if (dayMap.hasOwnProperty(h)) return h;
-      // fallback to real today if no/invalid hash
-      return days[new Date().getDay()];
-    }
+      function normalizeHashToDay() {
+        const h = (location.hash || "").slice(1).toLowerCase();
+        if (dayMap.hasOwnProperty(h)) return h;
+        // fallback to real today if no/invalid hash
+        return days[new Date().getDay()];
+      }
 
-    function updateActiveDay() {
-      const active = normalizeHashToDay();
+      function updateActiveDay() {
+        const active = normalizeHashToDay();
 
-      // Desktop: side list items
-      document.querySelectorAll('#week-nav li').forEach(li => li.classList.remove('is-active'));
-      const sideLink = document.querySelector(`#week-nav a[href="#${active}"]`);
-      if (sideLink) sideLink.parentElement.classList.add('is-active');
+        // Desktop: side list items
+        document.querySelectorAll('#week-nav li').forEach(li => li.classList.remove('is-active'));
+        const sideLink = document.querySelector(`#week-nav a[href="#${active}"]`);
+        if (sideLink) sideLink.parentElement.classList.add('is-active');
 
-      // Mobile dropdown items
-      document.querySelectorAll('#weekdays-mobile .dropdown-menu .dropdown-item').forEach(a => {
-        a.classList.remove('active'); a.removeAttribute('aria-current');
-      });
-      const ddLink = document.querySelector(`#weekdays-mobile .dropdown-menu a[href="#${active}"]`);
-      if (ddLink) { ddLink.classList.add('active'); ddLink.setAttribute('aria-current','true'); }
-    }
+        // Mobile dropdown items
+        document.querySelectorAll('#weekdays-mobile .dropdown-menu .dropdown-item').forEach(a => {
+          a.classList.remove('active');
+          a.removeAttribute('aria-current');
+        });
+        const ddLink = document.querySelector(`#weekdays-mobile .dropdown-menu a[href="#${active}"]`);
+        if (ddLink) {
+          ddLink.classList.add('active');
+          ddLink.setAttribute('aria-current', 'true');
+        }
+      }
 
-    window.addEventListener('hashchange', updateActiveDay);
-    window.addEventListener('DOMContentLoaded', updateActiveDay);
-  })();
-</script>
+      window.addEventListener('hashchange', updateActiveDay);
+      window.addEventListener('DOMContentLoaded', updateActiveDay);
+    })();
+  </script>
 
   <!-- Skip-to-map: smooth scroll without changing the hash -->
   <script>

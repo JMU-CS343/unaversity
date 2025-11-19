@@ -75,16 +75,8 @@ function initMap() {
 
   // Attach the renderer to your existing map
   directionsRenderer.setMap(map);
-
-  document.getElementById("debug-button").addEventListener("click", () => {
-    console.log("Debug button clicked");
-    route(
-      { lat: 38.43402431871841, lng: -78.8633940936242 },
-      { lat: 38.431346433308136, lng: -78.86144245742665 },
-      google.maps.TravelMode.WALKING
-    );
-  });
 }
+
 // 38.43402431871841, -78.8633940936242 -KING
 // 38.431346433308136, -78.86144245742665 -E-hALL
 

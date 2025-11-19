@@ -22,9 +22,8 @@
         <a class="navbar-brand" href="index.html">U<span style="color:#FFD966;">NAV</span>ERSITY</a>
 
         <!-- Burger toggler -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#mainMenu" aria-controls="mainMenu" aria-expanded="false"
-                aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainMenu"
+          aria-controls="mainMenu" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
 
@@ -54,9 +53,29 @@
     // Apply saved theme (Include in every page)
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+
+    //qr importing logic
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const scheduleData = params.get('data');
+
+      if (scheduleData) {
+        try {
+          // Decode and save to localStorage
+          const decodedData = decodeURIComponent(scheduleData);
+          localStorage.setItem('weeklySchedule', decodedData);
+
+          // Clean up the URL by redirecting to the clean page
+          window.location.href = 'html/schedule.html';
+        } catch (e) {
+          console.error('Error loading shared schedule:', e);
+        }
+      }
+    });
   </script>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

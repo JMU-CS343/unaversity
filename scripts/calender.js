@@ -1,6 +1,3 @@
-let LAST_CLASS = undefined;
-let WEEK_CLASS_COUNT = undefined;
-
 class EventData {
   constructor(name, number, location, start, end, professor) {
     this.name = name;
@@ -37,7 +34,75 @@ class EventData {
   }
 }
 
-let user_schedule = undefined;
+// ==================== SCHEDULE HELPERS ====================
+
+function getScheduleFromStorage() {
+  const stored = localStorage.getItem("weeklySchedule");
+  if (!stored) return null;
+
+  try {
+    const weeklyData = JSON.parse(stored);
+    // Reconstruct EventData objects for each day
+    return weeklyData.map((day) =>
+      day.map(
+        (ev) =>
+          new EventData(
+            ev.name,
+            ev.number,
+            {
+              building: ev.building,
+              room: ev.room,
+              unrecognized: ev.locationUnrecognized,
+            },
+            new Date(ev.start),
+            new Date(ev.end),
+            ev.professor
+          )
+      )
+    );
+  } catch (e) {
+    console.error("Error loading schedule from storage:", e);
+    return null;
+  }
+}
+
+function saveScheduleToStorage(schedule) {
+  localStorage.setItem("weeklySchedule", JSON.stringify(schedule));
+}
+
+function generateQr() {
+  const qrContainer = document.getElementById("qr-container");
+  qrContainer.innerHTML = getLoadingSpinner();
+
+  const json = localStorage.getItem("weeklySchedule");
+  const payload = encodeURIComponent(json);
+
+  // Create the full URL with the schedule data
+  const shareUrl = `https://unaversity.netlify.app/?data=${payload}`;
+
+  // Generate QR code pointing to that URL
+  const qrImg = document.createElement("img");
+  qrImg.src = `https://quickchart.io/qr?text=${encodeURIComponent(
+    shareUrl
+  )}&size=300`;
+  qrImg.alt = "QR Code for Schedule";
+  qrImg.style.maxWidth = "100%";
+
+  qrContainer.innerHTML = "";
+  qrContainer.appendChild(qrImg);
+}
+
+function downloadQr() {
+  const qrContainer = document.getElementById("qr-container");
+  if (qrContainer.innerHTML == "") {
+    return;
+  }
+
+  const link = document.createElement("a");
+  link.href = qrContainer.src;
+  link.download = "schedule-qr.png";
+  link.click();
+}
 
 // ==================== LOCATION PARSING ====================
 
@@ -108,7 +173,7 @@ function getBuildingCoordinates(buildingName) {
 // ==================== FILE HANDLING ====================
 
 function handleFileSelect(event) {
-  console.log("handleFileSelect called", event.target.files); // DEBUG
+  console.log("handleFileSelect called", event.target.files);
   const file = event.target.files[0];
   const modal = document.getElementById("parseReportModal");
   const body = document.querySelector("#parseReportModal .modal-body");
@@ -133,7 +198,7 @@ function handleFileSelect(event) {
   reader.onload = function (e) {
     try {
       const icsContent = e.target.result;
-      console.log("ICS content loaded, length:", icsContent.length); // DEBUG
+      console.log("ICS content loaded, length:", icsContent.length);
       const week = parseICSForWeeklySchedule(icsContent);
 
       title.textContent = "Import Successful!";
@@ -206,41 +271,7 @@ function displayClasses() {
 
   list.innerHTML = "";
 
-  let schedule = user_schedule;
-
-  if (!schedule) {
-    const stored = localStorage.getItem("weeklySchedule");
-    if (stored) {
-      try {
-        // weeklyData is already the 7-element array structure
-        const weeklyData = JSON.parse(stored);
-
-        // Reconstruct EventData objects for each day
-        schedule = weeklyData.map((day) =>
-          day.map(
-            (ev) =>
-              new EventData(
-                ev.name,
-                ev.number,
-                {
-                  building: ev.building,
-                  room: ev.room,
-                  unrecognized: ev.locationUnrecognized,
-                },
-                new Date(ev.start),
-                new Date(ev.end),
-                ev.professor
-              )
-          )
-        );
-        user_schedule = schedule;
-      } catch (e) {
-        console.error("Error loading schedule from storage:", e);
-        return;
-      }
-    }
-  }
-
+  const schedule = getScheduleFromStorage();
   if (!schedule) return;
 
   const dayMap = {
@@ -385,7 +416,9 @@ function validateLocationInput(input) {
 
 function saveScheduleChanges() {
   const list = document.getElementById("class-list");
-  if (!list || !user_schedule) return;
+  const schedule = getScheduleFromStorage();
+
+  if (!list || !schedule) return;
 
   const dayMap = {
     sunday: 0,
@@ -417,7 +450,7 @@ function saveScheduleChanges() {
     updatedClasses.push(
       new EventData(
         className,
-        user_schedule[dayIndex][index]?.number || "",
+        schedule[dayIndex][index]?.number || "",
         location,
         startDate,
         endDate,
@@ -427,10 +460,9 @@ function saveScheduleChanges() {
   });
 
   // Update the schedule
-  user_schedule[dayIndex] = updatedClasses;
-
-  localStorage.setItem("weeklySchedule", JSON.stringify(user_schedule));
-  console.log("Schedule saved to localStorage"); // DEBUG
+  schedule[dayIndex] = updatedClasses;
+  saveScheduleToStorage(schedule);
+  console.log("Schedule saved to localStorage");
 }
 
 function convertTimeToDate(timeString, dayOfWeek) {
@@ -555,17 +587,19 @@ function parseICSForWeeklySchedule(icsText) {
         location || "",
         start,
         end,
-        "" // Professor field empty from ICS import
+        ""
       );
       events.push(ev);
     }
   });
 
   events.sort((a, b) => a.start - b.start);
-  LAST_CLASS = events[events.length - 1];
-  user_schedule = convertToWeeklySchedule(events);
-  localStorage.setItem("weeklySchedule", JSON.stringify(user_schedule));
-  return user_schedule;
+  localStorage.setItem("lastClass", JSON.stringify(events[events.length - 1]));
+
+  const weeklySchedule = convertToWeeklySchedule(events);
+  saveScheduleToStorage(weeklySchedule);
+
+  return weeklySchedule;
 }
 
 function parseICSDate(line) {
@@ -606,7 +640,7 @@ function convertToWeeklySchedule(events) {
   weeklySchedule.forEach((dayEvents) => {
     dayEvents.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
   });
-  WEEK_CLASS_COUNT = count;
+  localStorage.setItem("classCount", count);
   return weeklySchedule;
 }
 
@@ -631,7 +665,7 @@ function escapeHtml(text) {
 window.addEventListener("hashchange", displayClasses);
 
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM loaded, displaying classes"); // DEBUG
+  console.log("DOM loaded, displaying classes");
 
   // Create datalist for building autocomplete
   if (!document.getElementById("buildings")) {
