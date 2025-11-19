@@ -212,17 +212,27 @@ function displayClasses() {
     const stored = localStorage.getItem("weeklySchedule");
     if (stored) {
       try {
-        const events = JSON.parse(stored).map((ev) => {
-          return new EventData(
-            ev.name,
-            ev.number,
-            ev.location || { building: ev.building || "", room: ev.room || "" },
-            new Date(ev.start),
-            new Date(ev.end),
-            ev.professor || ""
-          );
-        });
-        schedule = convertToWeeklySchedule(events);
+        // weeklyData is already the 7-element array structure
+        const weeklyData = JSON.parse(stored);
+
+        // Reconstruct EventData objects for each day
+        schedule = weeklyData.map((day) =>
+          day.map(
+            (ev) =>
+              new EventData(
+                ev.name,
+                ev.number,
+                {
+                  building: ev.building,
+                  room: ev.room,
+                  unrecognized: ev.locationUnrecognized,
+                },
+                new Date(ev.start),
+                new Date(ev.end),
+                ev.professor
+              )
+          )
+        );
         user_schedule = schedule;
       } catch (e) {
         console.error("Error loading schedule from storage:", e);
@@ -419,13 +429,7 @@ function saveScheduleChanges() {
   // Update the schedule
   user_schedule[dayIndex] = updatedClasses;
 
-  // Flatten and save to localStorage
-  const allEvents = [];
-  user_schedule.forEach((day) => {
-    allEvents.push(...day);
-  });
-
-  localStorage.setItem("parsedEvents", JSON.stringify(allEvents));
+  localStorage.setItem("weeklySchedule", JSON.stringify(user_schedule));
   console.log("Schedule saved to localStorage"); // DEBUG
 }
 
@@ -557,10 +561,10 @@ function parseICSForWeeklySchedule(icsText) {
     }
   });
 
-  localStorage.setItem("parsedEvents", JSON.stringify(events));
   events.sort((a, b) => a.start - b.start);
   LAST_CLASS = events[events.length - 1];
   user_schedule = convertToWeeklySchedule(events);
+  localStorage.setItem("weeklySchedule", JSON.stringify(user_schedule));
   return user_schedule;
 }
 
