@@ -234,6 +234,17 @@ main ul {
     display: flex;
     justify-content: center;
 }
+#qr-code-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 5rem; 
+  width: 4rem;
+  height: 4rem;
+  font-size: 1.5rem;
+  z-index: 1000;
+  background-color: var(--nav-background-color);
+    border-color: var(--nav-background-color);
+}
 
 #class-list img {
     width: 30%;

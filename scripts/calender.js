@@ -1,3 +1,6 @@
+let LAST_CLASS = undefined;
+let WEEK_CLASS_COUNT = undefined;
+
 class EventData {
   constructor(name, number, location, start, end, professor) {
     this.name = name;
@@ -206,7 +209,7 @@ function displayClasses() {
   let schedule = user_schedule;
 
   if (!schedule) {
-    const stored = localStorage.getItem("parsedEvents");
+    const stored = localStorage.getItem("weeklySchedule");
     if (stored) {
       try {
         const events = JSON.parse(stored).map((ev) => {
@@ -555,6 +558,8 @@ function parseICSForWeeklySchedule(icsText) {
   });
 
   localStorage.setItem("parsedEvents", JSON.stringify(events));
+  events.sort((a, b) => a.start - b.start);
+  LAST_CLASS = events[events.length - 1];
   user_schedule = convertToWeeklySchedule(events);
   return user_schedule;
 }
@@ -576,8 +581,7 @@ function parseICSDate(line) {
 function convertToWeeklySchedule(events) {
   const weeklySchedule = [[], [], [], [], [], [], []];
   const seenClasses = new Set();
-
-  events.sort((a, b) => a.start - b.start);
+  let count = 0;
 
   for (const event of events) {
     if (!event.start || !event.end) continue;
@@ -592,12 +596,13 @@ function convertToWeeklySchedule(events) {
 
     seenClasses.add(classKey);
     weeklySchedule[dayOfWeek].push(event);
+    count++;
   }
 
   weeklySchedule.forEach((dayEvents) => {
     dayEvents.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
   });
-
+  WEEK_CLASS_COUNT = count;
   return weeklySchedule;
 }
 
