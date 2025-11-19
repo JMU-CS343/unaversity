@@ -278,6 +278,7 @@
         e.preventDefault();
         const classToDelete = e.target.closest("li");
         classToDelete.remove();
+        saveScheduleChanges();
       }
     });
 
