@@ -22,7 +22,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (savedValue) {
         profilePicture.src = savedValue;
     }
-})
+});
 
 nameInput.addEventListener('input', () => {
     localStorage.setItem('name', nameInput.value);
@@ -63,8 +63,15 @@ function updateCountdown() {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    document.getElementById("countdown").textContent =
-        `${days}:${hours}:${minutes}:${seconds}`;
+    const isPhone = window.matchMedia("(max-width: 768px)").matches;
+
+    if (isPhone) {
+        // Phone view: only show days
+        countdown.textContent = `${days}`;
+    } else {
+        // Larger screens: show full breakdown
+        countdown.textContent = `${days}:${hours}:${minutes}:${seconds}`;
+    }
 }
 
 setInterval(updateCountdown, 1000);

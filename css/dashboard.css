@@ -47,7 +47,6 @@ main {
     height: 45rem;
     display: grid;
     place-items: center;
-
 }
 
 #profile-picture {
@@ -113,6 +112,7 @@ main {
     color: var(--text-color);
     width: 10rem;
     height: 12.75rem;
+    text-align: center;
 }
 
 .row1 {
@@ -120,7 +120,6 @@ main {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-
 }
 
 .row2 {
@@ -136,7 +135,6 @@ main {
     flex-wrap: wrap;
     justify-content: center;
 }
-
 
 .description {
     text-align: center;
@@ -162,7 +160,7 @@ main {
     height: 2rem;
     font-size: 6rem;
     position: relative;
-    bottom: 0;
+    bottom: 0rem;
     padding: 0;
 }
 .num3 {
@@ -171,4 +169,40 @@ main {
     position: relative;
     bottom: 0.25rem;
     padding: 0;
+}
+
+/* ===== Phone layout (stacked) ===== */
+@media (max-width: 768px) {
+
+    main {
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    #stats {
+        max-width: 25rem;
+        width: 90vw;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .row1,
+    .row2,
+    .row3 {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .stat-card {
+        width: 100%;
+        max-width: 20rem;
+    }
+
+    .num1 { bottom: 6rem; }
+    .num2 { bottom: 3rem; }
+    .num3 { bottom: 3rem; }
 }
