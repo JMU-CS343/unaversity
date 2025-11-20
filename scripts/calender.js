@@ -34,7 +34,60 @@ class EventData {
   }
 }
 
-let user_schedule = undefined;
+// ==================== SCHEDULE HELPERS ====================
+
+function getScheduleFromStorage() {
+  const stored = localStorage.getItem("weeklySchedule");
+  if (!stored) return null;
+
+  try {
+    const weeklyData = JSON.parse(stored);
+    // Reconstruct EventData objects for each day
+    return weeklyData.map((day) =>
+      day.map(
+        (ev) =>
+          new EventData(
+            ev.name,
+            ev.number,
+            {
+              building: ev.building,
+              room: ev.room,
+              unrecognized: ev.locationUnrecognized,
+            },
+            new Date(ev.start),
+            new Date(ev.end),
+            ev.professor
+          )
+      )
+    );
+  } catch (e) {
+    console.error("Error loading schedule from storage:", e);
+    return null;
+  }
+}
+
+function saveScheduleToStorage(schedule) {
+  localStorage.setItem("weeklySchedule", JSON.stringify(schedule));
+}
+
+function generateQr() {
+  const qrContainer = document.getElementById("qr-container");
+  qrContainer.innerHTML = getLoadingSpinner();
+
+  const json = localStorage.getItem("weeklySchedule");
+  const shareUrl = `https://unaversity.netlify.app/?data=${json}`;
+
+  console.log("URL length:", shareUrl.length);
+  console.log(
+    "QR API URL:",
+    `https://quickchart.io/qr?text=${encodeURIComponent(shareUrl)}&size=600`
+  );
+
+  qrContainer.src = `https://quickchart.io/qr?text=${encodeURIComponent(
+    shareUrl
+  )}&size=300`;
+  qrContainer.alt = "QR Code for Schedule";
+}
 
 // ==================== LOCATION PARSING ====================
 
@@ -105,7 +158,7 @@ function getBuildingCoordinates(buildingName) {
 // ==================== FILE HANDLING ====================
 
 function handleFileSelect(event) {
-  console.log("handleFileSelect called", event.target.files); // DEBUG
+  console.log("handleFileSelect called", event.target.files);
   const file = event.target.files[0];
   const modal = document.getElementById("parseReportModal");
   const body = document.querySelector("#parseReportModal .modal-body");
@@ -130,7 +183,7 @@ function handleFileSelect(event) {
   reader.onload = function (e) {
     try {
       const icsContent = e.target.result;
-      console.log("ICS content loaded, length:", icsContent.length); // DEBUG
+      console.log("ICS content loaded, length:", icsContent.length);
       const week = parseICSForWeeklySchedule(icsContent);
 
       title.textContent = "Import Successful!";
@@ -203,31 +256,7 @@ function displayClasses() {
 
   list.innerHTML = "";
 
-  let schedule = user_schedule;
-
-  if (!schedule) {
-    const stored = localStorage.getItem("parsedEvents");
-    if (stored) {
-      try {
-        const events = JSON.parse(stored).map((ev) => {
-          return new EventData(
-            ev.name,
-            ev.number,
-            ev.location || { building: ev.building || "", room: ev.room || "" },
-            new Date(ev.start),
-            new Date(ev.end),
-            ev.professor || ""
-          );
-        });
-        schedule = convertToWeeklySchedule(events);
-        user_schedule = schedule;
-      } catch (e) {
-        console.error("Error loading schedule from storage:", e);
-        return;
-      }
-    }
-  }
-
+  const schedule = getScheduleFromStorage();
   if (!schedule) return;
 
   const dayMap = {
@@ -372,7 +401,9 @@ function validateLocationInput(input) {
 
 function saveScheduleChanges() {
   const list = document.getElementById("class-list");
-  if (!list || !user_schedule) return;
+  const schedule = getScheduleFromStorage();
+
+  if (!list || !schedule) return;
 
   const dayMap = {
     sunday: 0,
@@ -404,7 +435,7 @@ function saveScheduleChanges() {
     updatedClasses.push(
       new EventData(
         className,
-        user_schedule[dayIndex][index]?.number || "",
+        schedule[dayIndex][index]?.number || "",
         location,
         startDate,
         endDate,
@@ -414,16 +445,9 @@ function saveScheduleChanges() {
   });
 
   // Update the schedule
-  user_schedule[dayIndex] = updatedClasses;
-
-  // Flatten and save to localStorage
-  const allEvents = [];
-  user_schedule.forEach((day) => {
-    allEvents.push(...day);
-  });
-
-  localStorage.setItem("parsedEvents", JSON.stringify(allEvents));
-  console.log("Schedule saved to localStorage"); // DEBUG
+  schedule[dayIndex] = updatedClasses;
+  saveScheduleToStorage(schedule);
+  console.log("Schedule saved to localStorage");
 }
 
 function convertTimeToDate(timeString, dayOfWeek) {
@@ -548,15 +572,19 @@ function parseICSForWeeklySchedule(icsText) {
         location || "",
         start,
         end,
-        "" // Professor field empty from ICS import
+        ""
       );
       events.push(ev);
     }
   });
 
-  localStorage.setItem("parsedEvents", JSON.stringify(events));
-  user_schedule = convertToWeeklySchedule(events);
-  return user_schedule;
+  events.sort((a, b) => a.start - b.start);
+  localStorage.setItem("lastClass", JSON.stringify(events[events.length - 1]));
+
+  const weeklySchedule = convertToWeeklySchedule(events);
+  saveScheduleToStorage(weeklySchedule);
+
+  return weeklySchedule;
 }
 
 function parseICSDate(line) {
@@ -576,8 +604,7 @@ function parseICSDate(line) {
 function convertToWeeklySchedule(events) {
   const weeklySchedule = [[], [], [], [], [], [], []];
   const seenClasses = new Set();
-
-  events.sort((a, b) => a.start - b.start);
+  let count = 0;
 
   for (const event of events) {
     if (!event.start || !event.end) continue;
@@ -592,12 +619,13 @@ function convertToWeeklySchedule(events) {
 
     seenClasses.add(classKey);
     weeklySchedule[dayOfWeek].push(event);
+    count++;
   }
 
   weeklySchedule.forEach((dayEvents) => {
     dayEvents.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
   });
-
+  localStorage.setItem("classCount", count);
   return weeklySchedule;
 }
 
@@ -622,7 +650,7 @@ function escapeHtml(text) {
 window.addEventListener("hashchange", displayClasses);
 
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM loaded, displaying classes"); // DEBUG
+  console.log("DOM loaded, displaying classes");
 
   // Create datalist for building autocomplete
   if (!document.getElementById("buildings")) {

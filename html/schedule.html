@@ -8,7 +8,7 @@
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <!-- Shared global styles (navbar, hero, etc.) -->
   <link rel="stylesheet" href="../css/styles.css">
   <script src="../scripts/data.js"></script>
@@ -17,6 +17,12 @@
   <link rel="stylesheet" href="../css/schedule.css">
   <link rel="stylesheet" href="../css/transitions.css">
   <link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet">
+
+  <!--QR CODE IMPORTING-->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+
+
 
   <!-- MAP STUFF (CSS first) -->
   <link rel="stylesheet" href="../css/map.css">
@@ -92,6 +98,10 @@
       data-bs-target="#addClassModal">
       +
     </button>
+    <button onclick="generateQr()" id="qr-code-btn" class="btn btn-success rounded-circle mt-5" style="right: 5rem;"
+      title="Generate QR Code" data-bs-toggle="modal" data-bs-target="#qr-code-modal">
+      <i class="bi bi-qr-code"></i>
+    </button>
     <!-- Set manual input modal to have class manualInputModal to work with the button-->
     <div class="modal fade" id="addClassModal" tabindex="-1" aria-labelledby="addClassModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
@@ -110,6 +120,9 @@
                 onclick="document.getElementById('icsFileInput').click()">
                 <i class="bi bi-file-earmark-arrow-up"></i> Import from ICS File
               </button>
+              <button onclick="importQr()" class="btn btn-outline-primary btn-lg" data-bs-dismiss="modal">
+                <i class="bi bi-qr-code"></i> Import from QR Code
+              </button>
             </div>
           </div>
         </div>
@@ -119,6 +132,21 @@
 
     <!-- Hidden file input for ICS -->
     <input type="file" id="icsFileInput" accept=".ics" style="display: none;" onchange="handleFileSelect(event)">
+
+    <div class="modal fade" id="qr-code-modal">
+      <div class="modal-dialog modal-dialog-centered modal-m">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Scan or Download for your Schedule</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center">
+
+            <img id="qr-container" style="max-width: 100vh; height: auto;">
+          </div>
+        </div>
+      </div>
+    </div>
 
 
     <div class="modal fade" id="parseReportModal" tabindex="-1" aria-labelledby="fileImportResult">
@@ -286,6 +314,7 @@
     document.getElementById("clear-classes").addEventListener("click", function () {
       const classList = document.getElementById("class-list");
       classList.innerHTML = "";
+      saveScheduleChanges();
     });
   </script>
   <script>
@@ -363,39 +392,50 @@
     })();
   </script>
   <script>
-  // Highlight whichever day is currently selected (via hash).
-  (function () {
-    const dayMap = { monday:1, tuesday:2, wednesday:3, thursday:4, friday:5,
-                     sunday:0, saturday:6 };
-    const days = Object.keys(dayMap);
+    // Highlight whichever day is currently selected (via hash).
+    (function () {
+      const dayMap = {
+        monday: 1,
+        tuesday: 2,
+        wednesday: 3,
+        thursday: 4,
+        friday: 5,
+        sunday: 0,
+        saturday: 6
+      };
+      const days = Object.keys(dayMap);
 
-    function normalizeHashToDay() {
-      const h = (location.hash || "").slice(1).toLowerCase();
-      if (dayMap.hasOwnProperty(h)) return h;
-      // fallback to real today if no/invalid hash
-      return days[new Date().getDay()];
-    }
+      function normalizeHashToDay() {
+        const h = (location.hash || "").slice(1).toLowerCase();
+        if (dayMap.hasOwnProperty(h)) return h;
+        // fallback to real today if no/invalid hash
+        return days[new Date().getDay()];
+      }
 
-    function updateActiveDay() {
-      const active = normalizeHashToDay();
+      function updateActiveDay() {
+        const active = normalizeHashToDay();
 
-      // Desktop: side list items
-      document.querySelectorAll('#week-nav li').forEach(li => li.classList.remove('is-active'));
-      const sideLink = document.querySelector(`#week-nav a[href="#${active}"]`);
-      if (sideLink) sideLink.parentElement.classList.add('is-active');
+        // Desktop: side list items
+        document.querySelectorAll('#week-nav li').forEach(li => li.classList.remove('is-active'));
+        const sideLink = document.querySelector(`#week-nav a[href="#${active}"]`);
+        if (sideLink) sideLink.parentElement.classList.add('is-active');
 
-      // Mobile dropdown items
-      document.querySelectorAll('#weekdays-mobile .dropdown-menu .dropdown-item').forEach(a => {
-        a.classList.remove('active'); a.removeAttribute('aria-current');
-      });
-      const ddLink = document.querySelector(`#weekdays-mobile .dropdown-menu a[href="#${active}"]`);
-      if (ddLink) { ddLink.classList.add('active'); ddLink.setAttribute('aria-current','true'); }
-    }
+        // Mobile dropdown items
+        document.querySelectorAll('#weekdays-mobile .dropdown-menu .dropdown-item').forEach(a => {
+          a.classList.remove('active');
+          a.removeAttribute('aria-current');
+        });
+        const ddLink = document.querySelector(`#weekdays-mobile .dropdown-menu a[href="#${active}"]`);
+        if (ddLink) {
+          ddLink.classList.add('active');
+          ddLink.setAttribute('aria-current', 'true');
+        }
+      }
 
-    window.addEventListener('hashchange', updateActiveDay);
-    window.addEventListener('DOMContentLoaded', updateActiveDay);
-  })();
-</script>
+      window.addEventListener('hashchange', updateActiveDay);
+      window.addEventListener('DOMContentLoaded', updateActiveDay);
+    })();
+  </script>
 
   <!-- Skip-to-map: smooth scroll without changing the hash -->
   <script>
