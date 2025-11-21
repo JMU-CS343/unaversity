@@ -76,3 +76,35 @@ function updateCountdown() {
 
 setInterval(updateCountdown, 1000);
 updateCountdown();
+
+
+// Stats
+const weeklySchedule = JSON.parse(localStorage.getItem('weeklySchedule'));
+console.log(weeklySchedule);
+
+let totalNumClasses = 0;
+let numClassDays = 0;
+let nameSet = new Set();
+let totalClassTime = 0;
+let longestDay = 0;
+
+for (let i = 0; i < weeklySchedule.length; i++) {
+    // Increment class days
+    if (weeklySchedule[i].length > 0) {
+        numClassDays++;
+    }
+
+    // Increment total classes
+    // Get set of unique class names
+    for (let indivClass of weeklySchedule[i]) {
+        totalNumClasses++;
+        nameSet.add(indivClass.name);
+
+    }
+
+}
+
+// Set stat values
+document.getElementById("total-classes").textContent = totalNumClasses;
+document.getElementById("course-count").textContent = nameSet.size;
+document.getElementById("class-days").textContent = numClassDays;
