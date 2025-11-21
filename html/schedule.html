@@ -265,40 +265,56 @@
   <script>
     // Add new class
     document.getElementById("manual-add-class").addEventListener("click", function () {
-      const classList = document.getElementById("class-list");
-      const newClass = document.createElement("li");
+        const classList = document.getElementById("class-list");
 
-      // Remove placeholder text before adding class
-      const classPlaceholderText = document.getElementById("class-placeholder-text");
-      if (classPlaceholderText) {
-        classPlaceholderText.remove();
-      }
-      // Remove mode/duration/arrow from first class in list
-      const isFirst = classList.children.length === 0;
+        // Initialize schedule if it doesn't exist
+        let schedule = getScheduleFromStorage();
+        if (!schedule) {
+          schedule = [[], [], [], [], [], [], []];
+          saveScheduleToStorage(schedule);
+        }
 
-      newClass.innerHTML = `
-        ${isFirst ? '' : `
-        <div class="mode-duration-wrapper">
-          <select class="form-select mode-duration" aria-label="Select mode">
-            <option class="mode-option" value="1">Walk</option>
-            <option class="mode-option" value="2">Bike</option>
-            <option class="mode-option" value="3">Drive</option>
-          </select>
-          <img class="route-arrow" onclick="arrowClick(event)" src="../assets/Arrow.png">
-          <div class="mode-duration output-time">0 min</div>
-        </div>
-        `}
-        <form>
-          <input type="text" class="class-name" name="class-name" placeholder="Class name">
-          <input type="text" class="prof-name" name="prof-name" placeholder="Professor">
-          <input type="time" class="time" name="start-time">
-          <input type="time" class="time" name="end-time">
-          <input type="text" class="location" name="location" placeholder="Location" list="buildings">
-          <button class="delete-class" type="button">-</button>
-        </form>
-      `;
-      classList.appendChild(newClass);
-    });
+        const newClass = document.createElement("li");
+
+        // Remove placeholder text before adding class
+        const classPlaceholderText = document.getElementById("class-placeholder-text");
+        if (classPlaceholderText) {
+          classPlaceholderText.remove();
+        }
+
+        // Remove mode/duration/arrow from first class in list
+        const isFirst = classList.children.length === 0;
+        newClass.innerHTML = `
+    ${isFirst ? '' : `
+      <div class="mode-duration-wrapper">
+        <select class="form-select mode-duration" aria-label="Select mode">
+          <option class="mode-option" value="1">Walk</option>
+          <option class="mode-option" value="2">Bike</option>
+          <option class="mode-option" value="3">Drive</option>
+        </select>
+        <img class="route-arrow" onclick="arrowClick(event)" src="../assets/Arrow.png">
+        <div class="mode-duration output-time">0 min</div>
+      </div>
+    `}
+    <form>
+      <input type="text" class="class-name" name="class-name" placeholder="Class name">
+      <input type="text" class="prof-name" name="prof-name" placeholder="Professor">
+      <input type="time" class="time" name="start-time">
+      <input type="time" class="time" name="end-time">
+      <div class="location-wrapper">
+        <input type="text" class="location" name="location" placeholder="Location" list="buildings">
+      </div>
+      <button class="delete-class" type="button">-</button>
+    </form>
+  `;
+        classList.appendChild(newClass);
+
+        // Immediately save the new empty class to localStorage
+        saveScheduleChanges();
+
+        // Re-attach listeners to include the new form
+        attachFormListeners();
+      });
 
     // Delete class
     document.getElementById("class-list").addEventListener("click", function (e) {
