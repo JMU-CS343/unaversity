@@ -401,9 +401,14 @@ function validateLocationInput(input) {
 
 function saveScheduleChanges() {
   const list = document.getElementById("class-list");
-  const schedule = getScheduleFromStorage();
+  let schedule = getScheduleFromStorage();
 
-  if (!list || !schedule) return;
+  // Initialize empty schedule if none exists
+  if (!schedule) {
+    schedule = [[], [], [], [], [], [], []];
+  }
+
+  if (!list) return;
 
   const dayMap = {
     sunday: 0,
@@ -428,7 +433,6 @@ function saveScheduleChanges() {
     const startTime = form.querySelector('input[name="start-time"]').value;
     const endTime = form.querySelector('input[name="end-time"]').value;
 
-    // Convert time inputs back to Date objects
     const startDate = convertTimeToDate(startTime, dayIndex);
     const endDate = convertTimeToDate(endTime, dayIndex);
 
@@ -444,7 +448,6 @@ function saveScheduleChanges() {
     );
   });
 
-  // Update the schedule
   schedule[dayIndex] = updatedClasses;
   saveScheduleToStorage(schedule);
   console.log("Schedule saved to localStorage");
