@@ -124,7 +124,7 @@ function route(from, to, how, elem = undefined) {
       if (elem != undefined) {
         elem.textContent = `${duration}`;
       }
-      dist.textContent = `Total Distance: ${distance}`;
+      dist.textContent = `Total Dist: ${distance}`;
 
       const distanceInMeters = route.distance.value; // e.g., 1932
       const durationInSeconds = route.duration.value; // e.g., 300
@@ -149,7 +149,7 @@ function getLoadingSpinner() {
     <div class="spinner-container">
       <div class="spinner"></div>
     </div>
-    
+
     <style>
       .spinner-container {
         display: flex;
@@ -157,7 +157,7 @@ function getLoadingSpinner() {
         align-items: center;
         padding: 10px;
       }
-      
+
       .spinner {
         width: 40px;
         height: 40px;
@@ -166,7 +166,7 @@ function getLoadingSpinner() {
         border-radius: 50%;
         animation: spin 1s linear infinite;
       }
-      
+
       @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }

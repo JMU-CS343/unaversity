@@ -158,6 +158,11 @@ button:hover {
   transform: scale(1.025);
 }
 
+/* hide page scrollbar */
+html { scrollbar-width: none; } /* Firefox */
+body { -ms-overflow-style: none; } /* IE and Edge */
+body::-webkit-scrollbar, body::-webkit-scrollbar-button { display: none; } /* Chrome (and Safari?)*/
+
 /* TRANSITIONS */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.001ms !important; }

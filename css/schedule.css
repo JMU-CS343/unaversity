@@ -77,9 +77,18 @@ body {
     background-color: var(--main-yellow-color);
     border-radius: 15px;
     margin-bottom: 1rem;
-    padding: 1.5rem 1rem;
+    /*padding: 1.5rem 1rem;*/
     font-size: xx-large;
     font-weight: 700;
+    text-align: center;
+}
+
+#week-nav a {
+    width: 15rem;
+    height: 6rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 
@@ -282,6 +291,26 @@ main ul {
     justify-content: space-evenly;
 }
 
+#route-time,
+#route-dist {
+    background-color: var(--main-yellow-color);
+    padding: 0.75rem;
+    font-size: 1.25rem;
+    border-radius: 10px;
+    width: 50%;
+    text-align: center;
+}
+
+#route-time {
+    margin-left: 0;
+    margin-right: 0.5rem;
+}
+
+#route-dist {
+    margin-right: 0;
+    margin-left: 0.5rem;
+}
+
 #add-class {
     width: 60px;
     height: 60px;
@@ -411,37 +440,47 @@ main ul {
         align-items: center;
         gap: 0.75rem;
     }
+
     /* Desktop week buttons off on these sizes */
     #week-nav {
         display: none !important;
     }
+
     #main-nav .navbar-collapse.show {
         position: relative;
         z-index: 5000;
         /* higher than .skip-link (3001) */
     }
+
     /* Weekdays dropdown block above main */
     #weekdays-mobile {
-        width: min(46rem, 92vw);
+        /* changed to make width slimmer */
+        width: min(35rem, 70vw);
         padding: 0 1rem;
         box-sizing: border-box;
         order: 0;
     }
+
     #weekdays-mobile .dropdown {
         width: 100%;
         margin: 0 auto;
     }
+
     /* Main + map centered and stacked */
     main {
         margin: 0 1rem 1rem 1rem;
-        width: min(46rem, 92vw);
+        /* changed to make width slimmer */
+        width: min(35rem, 70vw);
+        min-width: 25rem;
         order: 1;
     }
+
     #map-background {
         position: static;
         width: min(46rem, 92vw);
         order: 2;
     }
+
     #qr-container {
         display: flex !important;
         /* Force it to show for testing */
@@ -456,18 +495,22 @@ main ul {
         align-items: center;
         flex-direction: column;
     }
+
     #qr-container h1 {
         color: white;
         margin-bottom: 2rem;
     }
+
     #qr-container img {
         max-width: 80vmin;
         max-height: 80vmin;
     }
+
     /* hide the qr button on phones */
     #qr-code-btn {
         display: none;
     }
+
     .skip-link.skip-to-map {
         display: inline-block;
         position: fixed;
@@ -480,6 +523,7 @@ main ul {
         z-index: 3001;
         /* below nav dropdown (rule below) */
     }
+
     /* Keep it left-aligned when focused/clicked */
     .skip-link.skip-to-map:focus,
     .skip-link.skip-to-map:active,
@@ -496,7 +540,7 @@ main ul {
     /* ~2.5x normal button height */
     min-height: 110px;
     /* scale the text with viewport but clamp it */
-    font-size: clamp(1.25rem, 3.8vw, 2rem);
+    font-size: clamp(2.25rem, 5vw, 5rem);
 }
 
 #weekdays-mobile .dropdown-menu .dropdown-item {
