@@ -80,13 +80,15 @@ updateCountdown();
 
 // Stats
 const weeklySchedule = JSON.parse(localStorage.getItem('weeklySchedule'));
-console.log(weeklySchedule);
+console.log(JSON.stringify(weeklySchedule));
 
 let totalNumClasses = 0;
 let numClassDays = 0;
 let nameSet = new Set();
-let totalClassTime = 0;
-let longestDay = 0;
+let totalMinutes = 0;
+let minutes = 0;
+let hours = 0;
+let dayTotals = weeklySchedule.map(() => 0);
 
 for (let i = 0; i < weeklySchedule.length; i++) {
     // Increment class days
@@ -100,11 +102,29 @@ for (let i = 0; i < weeklySchedule.length; i++) {
         totalNumClasses++;
         nameSet.add(indivClass.name);
 
-    }
+        // Get total time
+        const start = new Date(indivClass.start);
+        const end = new Date(indivClass.end);
+        totalMinutes += (end - start) / 1000 / 60;
+        hours = Math.floor(totalMinutes / 60);
+        minutes = Math.floor(totalMinutes % 60);
+        // For longest day
+        dayTotals[i] += (end - start) / 1000 / 60;
 
+    }
 }
+
+// Get longest day
+const longestDayTotalMinutes = Math.max(...dayTotals);
+const longestDayHours = Math.floor(longestDayTotalMinutes / 60);
+const longestDayMinutes = Math.floor(longestDayTotalMinutes % 60);
+const longestDay = longestDayHours + ":" + longestDayMinutes.toString().padStart(2, "0");
+
+const totalClassTime = hours + ":" + minutes.toString().padStart(2, "0");
 
 // Set stat values
 document.getElementById("total-classes").textContent = totalNumClasses;
 document.getElementById("course-count").textContent = nameSet.size;
 document.getElementById("class-days").textContent = numClassDays;
+document.getElementById("total-class-time").textContent = totalClassTime;
+document.getElementById("longest-day").textContent = longestDay;
