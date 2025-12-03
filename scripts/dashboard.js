@@ -51,7 +51,7 @@ pfpInput.addEventListener('change', (e) => {
 
 
 // Countdown
-const targetTime = new Date("2026-03-06T00:00:00").getTime();
+const targetTime = new Date("2026-05-06T00:00:00").getTime();
 const countdown = document.getElementById("countdown");
 
 function updateCountdown() {
