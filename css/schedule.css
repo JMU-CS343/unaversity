@@ -466,6 +466,25 @@ main ul {
         margin: 0 auto;
     }
 
+    /* Center Add-Class button horizontally on small screens */
+    #add-class {
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+    }
+
+    #add-class {
+    border: 4px solid var(--main-yellow-color);
+    }
+
+    [data-theme="dark"] #add-class {
+        border-color: var(--main-yellow-color);
+    }
+
+    [data-theme="high-contrast"] #add-class {
+        border-color: var(--main-yellow-color);
+    }
+
     /* Main + map centered and stacked */
     main {
         margin: 0 1rem 1rem 1rem;
