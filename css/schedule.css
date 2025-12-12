@@ -213,6 +213,10 @@ main ul {
 
 /* Travel mode and duration between individual classes */
 
+#output-time {
+    line-height: normal;
+}
+
 .mode-duration {
     display: flex;
     justify-content: center;
