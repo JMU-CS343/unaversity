@@ -250,6 +250,13 @@ main ul {
     z-index: 1000;
     background-color: var(--nav-background-color);
     border-color: var(--nav-background-color);
+    transform: translateX(-50%);
+    z-index: 999;
+    transition: all 0.1s ease-in-out;
+}
+
+#qr-code-btn:hover {
+    transform: translateX(-50%) scale(1.1);
 }
 
 #class-list img {
